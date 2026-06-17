@@ -16,7 +16,10 @@
   },
   "dependencies": {
     "@ai-sdk/gateway": "^3.0.133",
+    "@ai-sdk/openai": "^3.0.72",
+    "@ai-sdk/openai-compatible": "^2.0.51",
     "@ai-sdk/vue": "^3.0.207",
+    "@comark/nuxt": "^0.4.0",
     "@electric-sql/pglite": "^0.5.3",
     "@neondatabase/serverless": "^1.1.0",
     "@nuxt/ui": "4.8.2",
@@ -28,12 +31,15 @@
     "ai": "^6.0.207",
     "date-fns": "^4.4.0",
     "drizzle-orm": "^0.45.2",
+    "gray-matter": "^4.0.3",
+    "marked": "^18.0.5",
     "nuxt": "^4.4.8",
     "postgres": "^3.4.9",
     "tailwindcss": "^4.3.1",
     "typescript": "^5.6.3 || ^6.0.0",
     "vue": "^3.5.35",
-    "vue-router": "^5.1.0"
+    "vue-router": "^5.1.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.113",

@@ -14,17 +14,17 @@ Authoritative spec: [`PLAN.md`](./PLAN.md). Read it before making structural cha
 
 ## Commands
 
-| Task | Command |
-|---|---|
-| Install | `pnpm install` (runs `nuxt prepare` via `postinstall`) |
-| Dev server | `pnpm dev` (requires Docker DB up first) |
-| Typecheck | `pnpm typecheck` (`nuxt typecheck`) |
-| Lint | `pnpm lint` (oxlint) |
-| Lint fix | `pnpm lint:fix` |
-| Format | `pnpm fmt` (oxfmt) |
-| Format check | `pnpm fmt:check` |
-| Build | `pnpm build` |
-| Preview | `pnpm preview` |
+| Task         | Command                                                |
+| ------------ | ------------------------------------------------------ |
+| Install      | `pnpm install` (runs `nuxt prepare` via `postinstall`) |
+| Dev server   | `pnpm dev` (requires Docker DB up first)               |
+| Typecheck    | `pnpm typecheck` (`nuxt typecheck`)                    |
+| Lint         | `pnpm lint` (oxlint)                                   |
+| Lint fix     | `pnpm lint:fix`                                        |
+| Format       | `pnpm fmt` (oxfmt)                                     |
+| Format check | `pnpm fmt:check`                                       |
+| Build        | `pnpm build`                                           |
+| Preview      | `pnpm preview`                                         |
 
 There is **no test command** — manual verification per PLAN.md's checklist. Do not add tests.
 
