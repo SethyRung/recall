@@ -7,6 +7,11 @@
       "skillPath": "skills/agent-browser/SKILL.md",
       "computedHash": "228f87d57035100d9dc6efcfc05aafd4b6e3962adacaa04b8217ab2fadb15dc8"
     },
+    "comark": {
+      "source": "comark.dev",
+      "sourceType": "well-known",
+      "computedHash": "c6b35ca32e1dd0f50b3bf1c1f780e23d984ba541ded9534176d3fbb337b9aec7"
+    },
     "nuxt-ui": {
       "source": "nuxt/ui",
       "sourceType": "github",
