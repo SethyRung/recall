@@ -14,7 +14,7 @@ A RAG chatbot prototype that answers questions about Sethy.
 ## Quickstart
 
 ```bash
-cp .env.example .env          # fill in MINIMAX_* and OPENAI_API_KEY
+cp .env.example .env          # fill in NUXT_LLM_* and NUXT_EMBED_API_KEY
 docker compose up -d          # start Postgres + pgvector
 bun install
 bun run dev                   # http://localhost:3000

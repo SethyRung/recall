@@ -17,11 +17,11 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    minimaxApiKey: "",
-    minimaxBaseUrl: "",
-    minimaxChatModel: "",
-    openaiApiKey: "",
-    openaiEmbedModel: "text-embedding-3-small",
+    llmBaseUrl: "",
+    llmApiKey: "",
+    llmModel: "",
+    embedApiKey: "",
+    embedModel: "",
     topK: 5,
     similarityThreshold: 0.3,
     chunkSize: 500,

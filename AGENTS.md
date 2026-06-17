@@ -30,7 +30,7 @@ There is **no test command** — manual verification per PLAN.md's checklist. Do
 
 ## Required setup order
 
-1. `cp .env.example .env` and fill keys (`MINIMAX_*`, `OPENAI_API_KEY`).
+1. `cp .env.example .env` and fill keys (`NUXT_LLM_*`, `NUXT_EMBED_API_KEY`).
 2. `docker compose up -d` (image is `pgvector/pgvector:pg18` — NOT `postgres:18-alpine`; the latter lacks pgvector).
 3. `pnpm install`.
 4. `pnpm dev` → `http://localhost:3000`.
