@@ -12,7 +12,7 @@ useHead({
 </script>
 
 <template>
-  <UApp :toaster="{ position: 'top-right' }">
+  <UApp :toaster="{ position: 'top-right' }" class="font-sans">
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
