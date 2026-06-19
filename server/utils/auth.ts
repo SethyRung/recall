@@ -2,6 +2,7 @@ import type { H3Event } from "h3";
 import { betterAuth } from "better-auth";
 import { withoutProtocol } from "ufo";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { getRequestHost, getRequestProtocol } from "h3";
 import { db } from "@nuxthub/db";
 import { user, session, account, verification } from "#server/db/schema";
 
