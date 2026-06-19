@@ -26,12 +26,18 @@ export default defineNuxtConfig({
     similarityThreshold: 0.3,
     chunkSize: 500,
     chunkOverlap: 50,
+    betterAuthSecret: "",
   },
 
   vite: {
     plugins: [tailwindcss()],
     optimizeDeps: {
-      include: ["@vue/devtools-core", "@vue/devtools-kit"],
+      include: [
+        "@vue/devtools-core",
+        "@vue/devtools-kit",
+        "better-auth/client/plugins",
+        "better-auth/vue",
+      ],
     },
   },
 });
