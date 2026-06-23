@@ -7,8 +7,6 @@ export default defineNuxtConfig({
 
   modules: ["@nuxt/ui", "@vueuse/nuxt", "@nuxthub/core", "@comark/nuxt"],
 
-  components: [{ path: "~/components", pathPrefix: false }],
-
   hub: {
     db: {
       dialect: "postgresql",
@@ -36,6 +34,24 @@ export default defineNuxtConfig({
       include: [
         "@ai-sdk/vue",
         "@comark/vue",
+        "@shikijs/langs/c",
+        "@shikijs/langs/cpp",
+        "@shikijs/langs/css",
+        "@shikijs/langs/diff",
+        "@shikijs/langs/dockerfile",
+        "@shikijs/langs/go",
+        "@shikijs/langs/graphql",
+        "@shikijs/langs/html",
+        "@shikijs/langs/java",
+        "@shikijs/langs/kotlin",
+        "@shikijs/langs/php",
+        "@shikijs/langs/python",
+        "@shikijs/langs/ruby",
+        "@shikijs/langs/rust",
+        "@shikijs/langs/sql",
+        "@shikijs/langs/swift",
+        "@shikijs/langs/toml",
+        "@shikijs/langs/xml",
         "@vue/devtools-core",
         "@vue/devtools-kit",
         "ai",
