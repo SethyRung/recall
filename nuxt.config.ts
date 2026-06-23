@@ -41,6 +41,7 @@ export default defineNuxtConfig({
         "ai",
         "better-auth/client/plugins",
         "better-auth/vue",
+        "zod",
       ],
     },
   },
