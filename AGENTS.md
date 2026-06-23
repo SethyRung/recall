@@ -1,77 +1,70 @@
-# AGENTS.md
+# Repository Guidelines
 
-Repo: **Recall** — RAG chatbot for Sethy's portfolio.
-Authoritative spec: [`PLAN.md`](./PLAN.md). Read it before making structural changes.
+A contributor guide for **Recall**, a RAG chatbot prototype built on Nuxt 4.
+It answers questions about Sethy.
 
-## Stack (pinned in `package.json`)
-
-- **Nuxt 4** (`nuxt@^4.4.8`) — `app/` for client, `server/` for Nitro, `shared/` for shared types.
-- **@nuxt/ui v4** (`@nuxt/ui@4.8.2`) — Reka UI + Tailwind v4. Auto-registers `@nuxt/icon`, `@nuxt/fonts`, `@nuxtjs/color-mode`. **Do not add these to `modules`.**
-- **@nuxthub/core** (`@nuxthub/core@^0.10.7`) — provides `hubDatabase()`.
-- **AI SDK v6** (`ai@^6.0.207`, `@ai-sdk/vue@^3.0.207`) — use the `Chat` class, **not** the deprecated `useChat`.
-- **@comark/nuxt** — `<Comark />` for streaming markdown in chat responses.
-- **Drizzle ORM** + **pgvector** (`vector_cosine_ops`, `ivfflat`).
-
-## Commands
-
-| Task         | Command                                                |
-| ------------ | ------------------------------------------------------ |
-| Install      | `pnpm install` (runs `nuxt prepare` via `postinstall`) |
-| Dev server   | `pnpm dev` (requires Docker DB up first)               |
-| Typecheck    | `pnpm typecheck` (`nuxt typecheck`)                    |
-| Lint         | `pnpm lint` (oxlint)                                   |
-| Lint fix     | `pnpm lint:fix`                                        |
-| Format       | `pnpm fmt` (oxfmt)                                     |
-| Format check | `pnpm fmt:check`                                       |
-| Build        | `pnpm build`                                           |
-| Preview      | `pnpm preview`                                         |
-
-There is **no test command** — manual verification per PLAN.md's checklist. Do not add tests.
-
-## Required setup order
-
-1. `cp .env.example .env` and fill keys (`NUXT_LLM_*`, `NUXT_EMBED_API_KEY`).
-2. `docker compose up -d` (image is `pgvector/pgvector:pg18` — NOT `postgres:18-alpine`; the latter lacks pgvector).
-3. `pnpm install`.
-4. `pnpm dev` → `http://localhost:3000`.
-
-## Repo layout
+## Project Structure & Module Organization
 
 ```
-app/       # Vue client: components/, composables/, layouts/, pages/, assets/
-server/    # Nitro: api/, utils/, plugins/
-shared/    # Types shared between client + server
-data/      # Markdown source files for ingestion
-public/    # Static assets
-docker-compose.yml  # Local Postgres + pgvector
-nuxt.config.ts
-opencode.json       # MCP servers (nuxt + nuxt-ui)
+app/        Vue client (components, layouts, pages, composables, middleware, utils)
+server/     Nitro endpoints (api/, db/, utils/) and server-only types/constants
+shared/     Types shared between client and server
+public/     Static assets served as-is
+docker-compose.yml   Local Postgres + pgvector
+nuxt.config.ts       Nuxt configuration
 ```
 
-## Repo conventions
+Key entry points: `app/app.vue`, `app/pages/index.vue`, `app/pages/admin/*`,
+`server/api/chat.post.ts`, `server/api/admin/*`.
 
-- **Never instantiate the Drizzle client manually.** Use `hubDatabase()` (auto-imported by `@nuxthub/core`). Wrap it in `server/utils/db.ts` with `useDB()`.
-- **Never read env via `process.env`** in app code. Use `useRuntimeConfig()` in server and `useRuntimeConfig().public` in client. Keys are declared in `runtimeConfig` in `nuxt.config.ts`.
-- **Auto-imports are real** — do not add explicit imports for `~/components`, `~/composables`, `~/utils`, or `hubDatabase()`. Imports like `useToast`, `defineShortcuts`, `useColorMode` come from `@nuxt/ui` auto-registration.
-- **Use Nuxt UI v4 components** (`UButton`, `UDashboardPanel`, `UChatMessages`, `UChatPrompt`, etc.) instead of raw Tailwind. Slot APIs are documented in `.nuxt/ui/<component>.ts` after `nuxt prepare`.
-- **AI SDK v6 patterns:**
-  - Client: `new Chat({ api: '/api/chat' })` from `@ai-sdk/vue`.
-  - Server: `streamText({ model, system, messages: await convertToModelMessages(messages) }).toUIMessageStreamResponse()`.
-  - Chat text extraction iterates `message.parts` and filters `type === 'text'`.
-- **Chunk schema** (`server/utils/schema.ts`): `documents.source` is unique; `chunks.embedding` is `vector(1536)` with an `ivfflat` cosine index.
-- **No TODOs in committed code.** Use `// NOTE:` for inline rationale.
+## Build, Test, and Development Commands
 
-## OpenCode MCP + skills (configured in `opencode.json` / `.agents/skills/`)
+All commands run via `bun` (the project pins `@types/bun`).
 
-- `nuxt` MCP — Nuxt 4 docs lookup (modules, deploy, getting started).
-- `nuxt-ui` MCP — component metadata, search, examples. **Use this before guessing component APIs.** Key tools: `search_components`, `get_component`, `get_component_metadata`, `search_icons`, `get_example`.
-- `agent-browser` skill — for any browser automation (QA, scraping, e2e).
-- `nuxt-ui` skill — load the `layouts/chat.md` reference when building chat UI; load `guidelines/design-system.md` before picking colors or variants.
+| Command         | Purpose                                     |
+| --------------- | ------------------------------------------- |
+| `bun install`   | Install dependencies                        |
+| `bun dev`       | Start dev server at `http://localhost:3000` |
+| `bun build`     | Production build (`.output/`)               |
+| `bun preview`   | Serve the production build                  |
+| `bun typecheck` | `vue-tsc` type checks                       |
+| `bun lint`      | `oxlint` static analysis                    |
+| `bun lint:fix`  | `oxlint --fix`                              |
+| `bun fmt`       | `oxfmt` formatter                           |
+| `bun fmt:check` | `oxfmt --check` (CI mode)                   |
 
-## Verification checklist (run before claiming "done")
+Before running the app, copy `.env.example` to `.env`, then
+`docker compose up -d` to start Postgres + pgvector.
 
-Per PLAN.md §"Verification Checklist": boot, embedding smoke test (`/api/embed`), ingest (`/api/ingest-all`), retrieval similarity, end-to-end chat stream, dark mode + mobile (375px), no console errors, then `pnpm typecheck && pnpm lint && pnpm fmt:check`.
+## Coding Style & Naming Conventions
 
-## Out of scope for v1
+- **Indentation**: 2 spaces, LF line endings, semicolons, double quotes, trailing
+  commas (per `oxfmt.config.ts`; print width 100).
+- **TypeScript** end-to-end (`tsconfig.json`); `@typescript-eslint/no-explicit-any`
+  is disabled, but prefer typed APIs and Zod schemas (`drizzle-zod`).
+- **Files**: route pages in `app/pages/*`, server endpoints in
+  `server/api/<name>.<method>.ts` (e.g. `chat.post.ts`), shared types in
+  `shared/types/`.
+- **Components**: PascalCase (`ChatMessage.vue`); composables prefixed with
+  `use`; env vars prefixed with `NUXT_`.
 
-Auth, persistent cross-session history, multi-user, voice, OCR, hybrid BM25+vector search, re-ranking, tests, CI. Do not implement these.
+## Commit & Pull Request Guidelines
+
+Commit messages follow Conventional Commits, as seen in history:
+`feat:`, `fix:`, `refactor:`, `chore:`. Use the imperative mood and keep the
+subject under ~72 characters.
+
+Pull requests should:
+
+- Describe the change and link any related issue.
+- Include screenshots or short clips for UI changes (chat, admin pages).
+- Confirm `bun typecheck`, `bun lint`, and `bun fmt:check` pass locally.
+- Note any new env vars or `docker compose` requirements.
+
+## Security & Configuration Tips
+
+- Never commit `.env`; only update `.env.example` when adding new keys.
+- Required secrets: `NUXT_LLM_*` (chat provider), `NUXT_EMBED_*` (embeddings),
+  `NUXT_BETTER_AUTH_SECRET`, `DATABASE_URL`.
+- After schema changes, regenerate migrations with `drizzle-kit` before opening
+  a PR.
