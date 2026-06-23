@@ -1,12 +1,5 @@
 import { createResource } from "#server/utils/resource";
 
-export type IngestError = { source: string; message: string };
-export type IngestResult = {
-  processed: number;
-  totalChunks: number;
-  errors: IngestError[];
-};
-
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ACCEPTED_EXT = /\.(md|markdown|mdown|mkd)$/i;
 
@@ -40,23 +33,28 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const result = await createResource({
-    content: part.data.toString("utf-8"),
-    title: filename.replace(/\.[^.]+$/, ""),
-    metadata: { mimeType: "text/markdown", size: part.data.length },
-  });
+  try {
+    const result = await createResource({
+      content: part.data.toString("utf-8"),
+      title: filename.replace(/\.[^.]+$/, ""),
+      metadata: { mimeType: "text/markdown", size: part.data.length },
+    });
 
-  if (!result.ok) {
-    return {
-      processed: 0,
-      totalChunks: 0,
-      errors: [{ source: filename, message: result.message ?? "" }],
-    } satisfies IngestResult;
+    if (!result.ok) {
+      return createResponse(
+        { code: ApiResponseCode.Success },
+        { processed: 0, totalChunks: 0, errors: [{ source: filename, message: result.message ?? "" }] },
+      );
+    }
+
+    return createResponse(
+      { code: ApiResponseCode.Success },
+      { processed: 1, totalChunks: result.chunks, errors: [] },
+    );
+  } catch {
+    return createResponse(
+      { code: ApiResponseCode.InternalError, message: "Failed to ingest file" },
+      null,
+    );
   }
-
-  return {
-    processed: 1,
-    totalChunks: result.chunks,
-    errors: [],
-  } satisfies IngestResult;
 });
