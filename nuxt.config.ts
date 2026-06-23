@@ -20,6 +20,7 @@ export default defineNuxtConfig({
     llmBaseUrl: "",
     llmApiKey: "",
     llmModel: "",
+    embedBaseUrl: "",
     embedApiKey: "",
     embedModel: "",
     topK: 5,
@@ -33,8 +34,11 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
     optimizeDeps: {
       include: [
+        "@ai-sdk/vue",
+        "@comark/vue",
         "@vue/devtools-core",
         "@vue/devtools-kit",
+        "ai",
         "better-auth/client/plugins",
         "better-auth/vue",
       ],
