@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
   const { messages } = await readBody<{ messages: UIMessage[] }>(event);
 
   const result = streamText({
-    model: provider(),
+    model: getModel(),
     system: SYSTEM_PROMPT,
     stopWhen: stepCountIs(5),
     messages: await convertToModelMessages(messages),

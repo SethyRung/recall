@@ -5,8 +5,7 @@
     "": {
       "name": "recall",
       "dependencies": {
-        "@ai-sdk/gateway": "^3.0.133",
-        "@ai-sdk/openai": "^3.0.72",
+        "@ai-sdk/openai": "^3.0.74",
         "@ai-sdk/openai-compatible": "^2.0.51",
         "@ai-sdk/vue": "^3.0.207",
         "@comark/nuxt": "^0.4.0",
@@ -46,7 +45,7 @@
   "packages": {
     "@ai-sdk/gateway": ["@ai-sdk/gateway@3.0.133", "", { "dependencies": { "@ai-sdk/provider": "3.0.10", "@ai-sdk/provider-utils": "4.0.30", "@vercel/oidc": "3.2.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-Ebs+7iS9zUgJu5B0RlxM2JmDWzq79Cpd6YdiqcCzB5qFdpfQJPUDiXutqlQP89F2XGjOdDeidulBTXUdXWzOxw=="],
 
-    "@ai-sdk/openai": ["@ai-sdk/openai@3.0.72", "", { "dependencies": { "@ai-sdk/provider": "3.0.10", "@ai-sdk/provider-utils": "4.0.30" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-ZF545m6pCXLUTERFfRCyfM7WsG4Nu/A+jlXQjSv7w22dGov02ssB0e1kviI3NLIERfRF/U+n2rKbFuUjzYY7CQ=="],
+    "@ai-sdk/openai": ["@ai-sdk/openai@3.0.74", "", { "dependencies": { "@ai-sdk/provider": "3.0.10", "@ai-sdk/provider-utils": "4.0.30" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-LPDBWd2WCv0GQs29K2pHcNrGx24hm4D8QEP386HwUAUPr1URho6bNVXHNmIv0FxaW+xDkLpNMTen+mFCUBp2LA=="],
 
     "@ai-sdk/openai-compatible": ["@ai-sdk/openai-compatible@2.0.51", "", { "dependencies": { "@ai-sdk/provider": "3.0.10", "@ai-sdk/provider-utils": "4.0.30" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-A6qfyaVs4lxmRxRux6U3ViOa8mMbsSd0OaHghpei2MpiBT6791J4zFH5MN7kaW1tLfQ246rSC2DVTMOavsycjQ=="],
 

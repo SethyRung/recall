@@ -1,16 +1,7 @@
 import { embed, embedMany } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
 import { cosineDistance, desc, gt, sql } from "drizzle-orm";
 import { db } from "@nuxthub/db";
 import { chunks } from "@nuxthub/db/schema";
-
-function getEmbeddingModel() {
-  const { embedBaseUrl: baseURL, embedApiKey: apiKey, embedModel } = useRuntimeConfig();
-  return createOpenAI({
-    baseURL,
-    apiKey,
-  }).embedding(embedModel);
-}
 
 const CHUNK_SIZE = 1000;
 const CHUNK_OVERLAP = 200;
@@ -96,7 +87,6 @@ export async function generateEmbedding(input: string) {
 
 export async function findRelevantContent(userQuery: string) {
   const userQueryEmbedded = await generateEmbedding(userQuery);
-  await writeEmbedding(userQueryEmbedded);
 
   const similarity = sql<number>`1 - (${cosineDistance(chunks.embedding, userQueryEmbedded)})`;
 

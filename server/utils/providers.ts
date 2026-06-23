@@ -1,6 +1,7 @@
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { createOpenAI } from "@ai-sdk/openai";
 
-export function provider() {
+export function getModel() {
   const { llmBaseUrl: baseURL, llmApiKey: apiKey, llmModel } = useRuntimeConfig();
 
   return createOpenAICompatible({
@@ -8,4 +9,12 @@ export function provider() {
     baseURL,
     apiKey,
   })(llmModel);
+}
+
+export function getEmbeddingModel() {
+  const { embedBaseUrl: baseURL, embedApiKey: apiKey, embedModel } = useRuntimeConfig();
+  return createOpenAI({
+    baseURL,
+    apiKey,
+  }).embedding(embedModel);
 }
