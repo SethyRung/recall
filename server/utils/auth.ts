@@ -4,7 +4,7 @@ import { withoutProtocol } from "ufo";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getRequestHost, getRequestProtocol } from "h3";
 import { db } from "@nuxthub/db";
-import { user, session, account, verification } from "#server/db/schema";
+import { user, session, account, verification } from "@nuxthub/db/schema";
 
 function normalizeLoopbackOrigin(origin: string): string {
   if (!import.meta.dev) return origin;
