@@ -28,6 +28,12 @@ export default defineNuxtConfig({
     betterAuthSecret: "",
   },
 
+  nitro: {
+    experimental: {
+      tasks: true,
+    },
+  },
+
   vite: {
     plugins: [tailwindcss()],
     optimizeDeps: {
