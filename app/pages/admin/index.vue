@@ -1,13 +1,31 @@
 <script setup lang="ts">
+import { isSuccessResponse, type ApiResponse, type IngestResult } from "#shared/types";
+
 definePageMeta({ layout: "admin", middleware: ["admin"] });
 
-const { data: stats, refresh: refreshStats } = await useFetch("/api/admin/stats");
+type Stats = { documents: number; chunks: number; lastIngest: string | null };
+
+const { data: statsEnvelope, refresh: refreshStats } = await useFetch<ApiResponse<Stats>>(
+  "/api/admin/stats",
+);
+
+const stats = computed<Stats | null>(() => {
+  const env = statsEnvelope.value;
+  return env && isSuccessResponse(env) ? env.data : null;
+});
 
 const file = ref<File | null>(null);
 const ingesting = ref(false);
 const resetting = ref(false);
 
 const toast = useToast();
+
+const unwrap = <T>(res: ApiResponse<T>): T => {
+  if (!isSuccessResponse(res)) {
+    throw new Error(res.status.message || "Request failed");
+  }
+  return res.data;
+};
 
 async function ingest() {
   if (!file.value) return;
@@ -16,24 +34,25 @@ async function ingest() {
     const body = new FormData();
     body.append("files", file.value, file.value.name);
 
-    const res = await $fetch<{
-      processed: number;
-      totalChunks: number;
-      errors: { source: string; message: string }[];
-    }>("/api/admin/ingest", { method: "POST", body });
+    const res = await $fetch<ApiResponse<IngestResult>>("/api/admin/ingest", {
+      method: "POST",
+      body,
+    });
 
-    if (res.processed > 0) {
+    const data = unwrap(res);
+
+    if (data.processed > 0) {
       toast.add({
         title: "Ingest complete",
-        description: `${res.processed} file, ${res.totalChunks} chunks`,
+        description: `${data.processed} file, ${data.totalChunks} chunks`,
         color: "success",
         icon: "i-lucide-check",
       });
     }
-    if (res.errors.length > 0) {
+    if (data.errors.length > 0) {
       toast.add({
-        title: `${res.errors.length} file(s) failed`,
-        description: res.errors.map((e) => `${e.source}: ${e.message}`).join("\n"),
+        title: `${data.errors.length} file(s) failed`,
+        description: data.errors.map((e) => `${e.source}: ${e.message}`).join("\n"),
         color: "warning",
         icon: "i-lucide-alert-triangle",
       });
@@ -55,7 +74,10 @@ async function ingest() {
 async function reset() {
   resetting.value = true;
   try {
-    await $fetch("/api/admin/reset", { method: "POST" });
+    const res = await $fetch<ApiResponse<{ ok: true }>>("/api/admin/reset", {
+      method: "POST",
+    });
+    unwrap(res);
     await refreshStats();
     toast.add({ title: "Database reset", color: "success", icon: "i-lucide-check" });
   } catch (e) {
@@ -75,7 +97,7 @@ async function reset() {
   <UDashboardPanel>
     <template #body>
       <UContainer class="py-6 space-y-6">
-        <StatsPanel :stats="stats" />
+        <StatsPanel v-if="stats" :stats="stats" />
 
         <UPageCard title="Ingest" icon="i-lucide-database">
           <div class="space-y-4">
