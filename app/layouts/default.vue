@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
+import type { DropdownMenuItem, NavigationMenuItem } from "@nuxt/ui";
 
 const { data: session } = await useSession(useFetch);
+
+const user = computed(() => session.value?.user);
+
+const isSignedIn = computed(() => !!user.value && !user.value.isAnonymous);
 
 const navItems = computed<NavigationMenuItem[]>(
   () =>
@@ -16,13 +20,35 @@ const navItems = computed<NavigationMenuItem[]>(
         label: "Chat",
         to: "/chat",
       },
-      session.value?.user.role === "admin" && {
+      user.value?.role === "admin" && {
         icon: "i-lucide:ghost",
         label: "Admin",
         to: "/admin",
       },
     ].filter(Boolean) as NavigationMenuItem[],
 );
+
+const userMenuItems = computed<DropdownMenuItem[]>(() => [
+  {
+    type: "label",
+    label: user.value?.name ?? "Account",
+  },
+  {
+    type: "label",
+    label: user.value?.email ?? "",
+    class: "text-toned text-xs",
+  },
+  { type: "separator" },
+  {
+    label: "Sign out",
+    icon: "i-lucide-log-out",
+    color: "error",
+    onSelect: async () => {
+      await signOut();
+      await navigateTo("/");
+    },
+  },
+]);
 </script>
 
 <template>
@@ -36,11 +62,23 @@ const navItems = computed<NavigationMenuItem[]>(
 
       <template #right>
         <UColorModeButton />
+
+        <UDropdownMenu v-if="isSignedIn" :items="userMenuItems">
+          <UButton
+            :label="user?.name ?? 'Account'"
+            icon="i-lucide-user-round"
+            color="neutral"
+            variant="ghost"
+          />
+        </UDropdownMenu>
+
         <UButton
-          label="Start chatting"
-          trailing-icon="i-lucide-arrow-up-right"
-          to="/chat"
-          class="hidden lg:inline-flex"
+          v-else
+          to="/auth"
+          label="Sign in"
+          icon="i-lucide-log-in"
+          color="neutral"
+          variant="ghost"
         />
       </template>
 

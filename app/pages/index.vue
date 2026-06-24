@@ -55,7 +55,9 @@ const stack = [
         </div>
       </div>
 
-      <div class="max-w-2xl mx-auto ring ring-default rounded-xl overflow-hidden">
+      <div
+        class="max-w-2xl mx-auto grid grid-rows-[auth_1fr_auto] ring ring-default rounded-xl overflow-hidden"
+      >
         <div class="flex items-center gap-1.5 px-4 py-3 bg-muted">
           <span class="size-2.5 rounded-full bg-primary/30" />
           <span class="size-2.5 rounded-full bg-primary/50" />
