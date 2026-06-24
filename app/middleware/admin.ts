@@ -1,18 +1,19 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   const { data: session } = await useSession(useFetch);
+  const user = session.value?.user;
 
-  if (!session.value?.user) {
+  if (!user || user.isAnonymous) {
     return navigateTo({
-      path: "/admin/login",
+      path: "/auth",
       query: { redirect: to.fullPath },
     });
   }
 
-  if (session.value.user.role !== "admin") {
-    throw createError({
+  if (user.role !== "admin") {
+    return showError({
       statusCode: 403,
       statusMessage: "Forbidden",
-      fatal: true,
+      message: "This area is reserved for admins.",
     });
   }
 });

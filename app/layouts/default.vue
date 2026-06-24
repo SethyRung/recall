@@ -26,7 +26,7 @@ const navItems = computed<NavigationMenuItem[]>(
 </script>
 
 <template>
-  <div class="bg-background">
+  <div>
     <UHeader>
       <template #title>
         <Logo />

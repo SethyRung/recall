@@ -51,7 +51,7 @@ export default defineTask({
     return {
       result: createResponse(
         { code: ApiResponseCode.Success },
-        { ok: true, id: userId, email: parsed.data.email, role: "admin" },
+        { id: userId, email: parsed.data.email, role: "admin" },
       ),
     };
   },
