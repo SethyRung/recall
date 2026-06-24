@@ -1,152 +1,232 @@
 <script setup lang="ts">
-import { isReasoningUIPart, isTextUIPart } from "ai";
-import { Chat } from "@ai-sdk/vue";
-import { isPartStreaming } from "@nuxt/ui/utils/ai";
+useHead({ title: "Recall · A thinking partner grounded in Sethy's notes" });
 
-const toast = useToast();
-
-const input = ref("");
-const loading = ref(false);
-
-const models = [
+const steps = [
   {
-    label: "MiniMax-M2.7",
-    value: "MiniMax-M2.7",
-    icon: "i-simple-icons:minimax",
+    eyebrow: "01",
+    title: "Retrieve",
+    body: "Your question hits pgvector and pulls the most relevant markdown chunks from Sethy's notes — not the open web.",
+  },
+  {
+    eyebrow: "02",
+    title: "Reason",
+    body: "The chat model reads those chunks, decides if they're enough, and writes a grounded answer in plain language.",
+  },
+  {
+    eyebrow: "03",
+    title: "Remember",
+    body: "Every conversation is saved under a private visitor ID — reload, come back tomorrow, pick up exactly where you left off.",
   },
 ];
 
-const model = ref(models[0]!.value);
-
-const chat = new Chat({
-  onError(error) {
-    toast.add({
-      title: "Recall had trouble responding",
-      description: error.message,
-      color: "error",
-      icon: "i-lucide:circle-x",
-    });
-  },
-});
-
-const greeting = computed(() => {
-  const hour = new Date().getHours();
-  let timeGreeting = "Good evening";
-  if (hour < 12) timeGreeting = "Good morning";
-  else if (hour < 18) timeGreeting = "Good afternoon";
-
-  return timeGreeting;
-});
-
-async function onSubmit() {
-  chat.sendMessage({ text: input.value });
-  input.value = "";
-}
-
-async function onSubmitQuickChat(text: string) {
-  chat.sendMessage({ text });
-}
+const stack = [
+  { name: "Nuxt 4" },
+  { name: "Postgres + pgvector" },
+  { name: "Better Auth" },
+  { name: "AI SDK" },
+  { name: "Comark" },
+  { name: "Drizzle" },
+];
 </script>
 
 <template>
-  <UDashboardPanel id="home" :ui="{ body: 'py-0 sm:py-0 grid grid-rows-[auto_1fr]' }">
-    <template #body>
-      <div class="py-3 px-2.5 flex justify-between items-center">
-        <NuxtLink to="/" class="flex items-center gap-2">
-          <UIcon name="i-lucide-sparkles" class="size-5 text-primary" />
-          <span class="font-semibold tracking-tight">Recall</span>
-        </NuxtLink>
-
-        <UColorModeButton />
-      </div>
-
-      <UContainer class="h-full overflow-auto space-y-6 relative">
-        <h1
-          v-if="chat.messages.length == 0"
-          class="text-3xl sm:text-4xl text-highlighted font-bold"
+  <div class="space-y-20 py-10">
+    <UContainer class="grid lg:grid-cols-2 gap-14 lg:gap-20">
+      <div class="text-center lg:text-left space-y-6">
+        <span
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-elevated text-toned text-xs font-medium tracking-wide uppercase"
         >
-          {{ greeting }}
+          <span class="size-1.5 rounded-full bg-primary animate-ping" />
+          RAG chatbot
+        </span>
+
+        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-semibold text-highlighted">
+          Hi, I'm <span class="font-pixel font-medium text-primary">Recall</span>
         </h1>
 
-        <UChatMessages
-          v-else
-          should-auto-scroll
-          :messages="chat.messages"
-          :status="chat.status"
-          :spacing-offset="80"
+        <p class="text-lg sm:text-xl text-muted leading-relaxed max-w-2xl mx-auto">
+          Ask me anything about Sethy's work, projects, and ideas. Every answer is grounded in his
+          actual notes — and your conversation saves itself, no account needed.
+        </p>
+
+        <div class="flex flex-wrap items-center lg:justify-normal justify-center gap-3 pt-2">
+          <UButton icon="i-lucide-message-circle" label="Start chatting" to="/chat" />
+          <UButton label="How it works" color="neutral" variant="outline" to="#how" />
+        </div>
+      </div>
+
+      <div class="max-w-2xl mx-auto ring ring-default rounded-xl overflow-hidden">
+        <div class="flex items-center gap-1.5 px-4 py-3 bg-muted">
+          <span class="size-2.5 rounded-full bg-primary/30" />
+          <span class="size-2.5 rounded-full bg-primary/50" />
+          <span class="size-2.5 rounded-full bg-primary/80" />
+          <span class="ml-3 text-xs font-mono text-muted">recall · chat</span>
+        </div>
+
+        <div class="p-5 sm:p-6 font-mono text-sm text-toned space-y-3 leading-relaxed">
+          <div class="flex items-center gap-2.5 text-toned/70">
+            <UIcon name="i-lucide-chevron-right" class="text-primary shrink-0" />
+            <p>What is Sethy building right now?</p>
+          </div>
+          <p class="ml-6">
+            A Nuxt 4 RAG prototype on Postgres + pgvector, with an anonymous-friendly chat that
+            remembers each visitor's history...
+          </p>
+
+          <div class="flex items-center gap-2.5">
+            <UIcon name="i-lucide-chevron-right" class="text-primary shrink-0" />
+            <p class="text-toned/70">Which model backs it?</p>
+          </div>
+          <p class="ml-6">Chat streams through LLM; embeddings use a separate model.</p>
+        </div>
+
+        <div class="px-4 py-2.5 bg-muted text-xs font-mono text-muted flex items-center gap-1">
+          <UIcon name="i-lucide-circle-dot" class="text-primary size-3" />
+          <span>ready · 4 sources cited</span>
+        </div>
+      </div>
+    </UContainer>
+
+    <UContainer id="how">
+      <div class="max-w-2xl mb-12">
+        <span
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-elevated text-toned text-xs font-medium tracking-wide uppercase"
         >
-          <template #indicator>
-            <div class="flex items-center gap-1.5">
-              <ChatIndicator />
+          <UIcon name="i-lucide-sliders-horizontal" class="text-primary" />
+          How it works
+        </span>
+        <h2
+          class="mt-4 text-3xl sm:text-4xl lg:text-5xl font-medium tracking-[-0.02em] text-highlighted leading-[1.05]"
+        >
+          Three steps, <span class="font-pixel text-primary">fully visible</span>
+        </h2>
+        <p class="mt-4 text-muted leading-relaxed">
+          No black box. Retrieval, reasoning, and persistence are all part of the same surface — you
+          can see what Recall reads before it answers.
+        </p>
+      </div>
 
-              <UChatShimmer text="Thinking..." class="text-sm" />
-            </div>
-          </template>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <article
+          v-for="step in steps"
+          :key="step.title"
+          class="rounded-xl bg-muted ring-1 ring-default p-6 space-y-3"
+        >
+          <div class="flex items-center justify-between">
+            <span class="font-pixel text-primary text-xs leading-none tracking-tighter">
+              {{ step.eyebrow }}
+            </span>
+          </div>
+          <h3 class="text-xl font-medium text-highlighted tracking-tight">
+            {{ step.title }}
+          </h3>
+          <p class="text-sm text-muted leading-relaxed">{{ step.body }}</p>
+        </article>
+      </div>
+    </UContainer>
 
-          <template #content="{ message }">
-            <template
-              v-for="(part, index) in getMergedParts(message.parts)"
-              :key="`${message.id}-${part.type}-${index}`"
-            >
-              <UChatReasoning
-                v-if="isReasoningUIPart(part)"
-                :text="part.text"
-                :streaming="isPartStreaming(part)"
-                chevron="leading"
+    <UContainer id="exchange">
+      <div class="max-w-2xl mb-12">
+        <span
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-elevated text-toned text-xs font-medium tracking-wide uppercase"
+        >
+          <UIcon name="i-lucide-terminal" class="text-primary" />
+          A real exchange
+        </span>
+        <h2
+          class="mt-4 text-3xl sm:text-4xl lg:text-5xl font-medium tracking-[-0.02em] text-highlighted leading-[1.05]"
+        >
+          Answered, <span class="font-pixel text-primary">not guessed</span>
+        </h2>
+        <p class="mt-4 text-muted leading-relaxed">
+          Every response cites the notes it read. If Recall can't find anything relevant, it says so
+          — instead of inventing an answer.
+        </p>
+      </div>
+
+      <div class="rounded-xl bg-muted ring ring-default overflow-hidden divide-y divide-default">
+        <div class="px-5 py-4">
+          <p class="text-base sm:text-lg text-highlighted leading-relaxed">
+            What tools does Sethy reach for most when shipping a side project?
+          </p>
+        </div>
+
+        <div class="px-5 py-4 space-y-4 bg-default">
+          <div
+            class="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-toned"
+          >
+            <UIcon name="i-lucide-sparkles" class="text-primary" />
+            <span>recall</span>
+          </div>
+          <div class="space-y-4 text-default leading-relaxed">
+            <p>
+              Three things show up again and again in Sethy's notes:
+              <strong class="text-highlighted">Bun</strong>
+              as the runtime and package manager,
+              <strong class="text-highlighted">Postgres</strong> with
+              <strong class="text-highlighted">pgvector</strong> for storage and retrieval, and
+              <strong class="text-highlighted">Nuxt UI</strong> for the surface itself.
+            </p>
+
+            <p>
+              The pattern across recent projects is consistent — small, well-typed API layer, a few
+              server-rendered pages, and a chat surface that uses the same primitives. Less is more.
+            </p>
+
+            <USeparator />
+
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs font-mono uppercase tracking-wider text-toned mr-1">
+                sources
+              </span>
+
+              <span
+                v-for="source in ['stack.md', 'projects.md', 'notes/2026-q2.md']"
+                :key="source"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-elevated ring-1 ring-default text-xs text-toned"
               >
-                <ChatComark :markdown="part.text" :streaming="isPartStreaming(part)" />
-              </UChatReasoning>
-
-              <template v-else-if="isTextUIPart(part)">
-                <ChatComark
-                  v-if="message.role === 'assistant'"
-                  :markdown="part.text"
-                  :streaming="isPartStreaming(part)"
-                />
-                <template v-else-if="message.role === 'user'">
-                  <p class="whitespace-pre-wrap">
-                    {{ part.text }}
-                  </p>
-                </template>
-              </template>
-            </template>
-          </template>
-        </UChatMessages>
-
-        <UChatPrompt
-          v-model="input"
-          :error="chat.error"
-          variant="soft"
-          :ui="{
-            root: 'sticky bottom-0 [view-transition-name:chat-prompt] z-10',
-            base: 'px-1.5',
-          }"
-          @submit="onSubmit"
-        >
-          <template #footer>
-            <div class="flex items-center gap-1">
-              <USelectMenu
-                v-model="model"
-                :items="models"
-                :icon="models.find((m) => m.value === model)?.icon"
-                variant="ghost"
-                value-key="value"
-                :ui="{
-                  trailingIcon:
-                    'group-data-[state=open]:rotate-180 transition-transform duration-200',
-                }"
-              />
+                <UIcon name="i-lucide-arrow-up-right" class="text-primary size-3" />
+                {{ source }}
+              </span>
             </div>
+          </div>
+        </div>
+      </div>
+    </UContainer>
 
-            <UChatPromptSubmit
-              :status="chat.status"
-              color="neutral"
-              @stop="chat.stop()"
-              @reload="chat.regenerate()"
-            />
-          </template>
-        </UChatPrompt>
-      </UContainer>
-    </template>
-  </UDashboardPanel>
+    <UContainer>
+      <div class="max-w-2xl mb-10">
+        <span
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted text-toned text-xs font-medium tracking-wide uppercase ring-1 ring-default"
+        >
+          <UIcon name="i-lucide-package" class="text-primary" />
+          Built with
+        </span>
+        <h2
+          class="mt-4 text-3xl sm:text-4xl font-medium tracking-[-0.02em] text-highlighted leading-[1.05]"
+        >
+          Boring tools, <span class="font-pixel text-primary">deliberately</span>
+        </h2>
+      </div>
+
+      <ul class="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <template v-for="(tech, i) in stack" :key="tech.name">
+          <li>
+            <UBadge color="neutral" variant="outline" size="md">
+              <template #leading>
+                <UIcon name="i-lucide-chevron-right" class="text-primary size-3" />
+              </template>
+              {{ tech.name }}
+            </UBadge>
+          </li>
+          <UIcon
+            v-if="i < stack.length - 1"
+            name="i-lucide-plus"
+            class="text-dimmed size-3 select-none"
+            aria-hidden="true"
+          />
+        </template>
+      </ul>
+    </UContainer>
+  </div>
 </template>

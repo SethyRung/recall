@@ -6,18 +6,30 @@
   --font-mono: "Geist Mono", monospace;
   --font-pixel: "Geist Pixel", sans-serif;
 
+  --color-primary-50: #f3fbf2;
+  --color-primary-100: #e3f6e2;
+  --color-primary-200: #c8ecc6;
+  --color-primary-300: #9cdb9a;
+  --color-primary-400: #69c266;
+  --color-primary-500: #44a841;
+  --color-primary-600: #338930;
+  --color-primary-700: #2b6c29;
+  --color-primary-800: #265625;
+  --color-primary-900: #204720;
+  --color-primary-950: #0d260d;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
+  --background: var(--color-cream-100);
+  --foreground: var(--color-cream-950);
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
+  --background: var(--color-cream-950);
+  --foreground: var(--color-cream-100);
 }
 
 @utility no-scrollbar {
