@@ -29,6 +29,7 @@ export default defineNuxtConfig({
   },
 
   nitro: {
+    preset: "bun",
     experimental: {
       tasks: true,
     },
@@ -66,5 +67,13 @@ export default defineNuxtConfig({
         "zod",
       ],
     },
+  },
+
+  fonts: {
+    families: [
+      { name: "Geist", provider: "local" },
+      { name: "Geist Mono", provider: "local" },
+      { name: "Geist Pixel", provider: "local" },
+    ],
   },
 });
