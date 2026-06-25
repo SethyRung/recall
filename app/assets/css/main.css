@@ -6,17 +6,17 @@
   --font-mono: "Geist Mono", monospace;
   --font-pixel: "Geist Pixel", sans-serif;
 
-  --color-primary-50: #f3fbf2;
-  --color-primary-100: #e3f6e2;
-  --color-primary-200: #c8ecc6;
-  --color-primary-300: #9cdb9a;
-  --color-primary-400: #69c266;
-  --color-primary-500: #44a841;
-  --color-primary-600: #338930;
-  --color-primary-700: #2b6c29;
-  --color-primary-800: #265625;
-  --color-primary-900: #204720;
-  --color-primary-950: #0d260d;
+  --color-apple-50: #f3fbf2;
+  --color-apple-100: #e3f6e2;
+  --color-apple-200: #c8ecc6;
+  --color-apple-300: #9cdb9a;
+  --color-apple-400: #69c266;
+  --color-apple-500: #44a841;
+  --color-apple-600: #338930;
+  --color-apple-700: #2b6c29;
+  --color-apple-800: #265625;
+  --color-apple-900: #204720;
+  --color-apple-950: #0d260d;
 }
 
 @utility no-scrollbar {
