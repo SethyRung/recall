@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import { isSuccessResponse, type ApiResponse, type IngestResult } from "#shared/types";
+import { isSuccessResponse } from "#shared/types";
 
 definePageMeta({ layout: "admin", middleware: ["admin"] });
 
-type Stats = { documents: number; chunks: number; lastIngest: string | null };
+const { csrf, headerName } = useCsrf();
 
-const { data: statsEnvelope, refresh: refreshStats } =
-  await useFetch<ApiResponse<Stats>>("/api/admin/stats");
+const { data: statsEnvelope, refresh: refreshStats } = await useCsrfFetch("/api/admin/stats");
 
-const stats = computed<Stats | null>(() => {
+const stats = computed(() => {
   const env = statsEnvelope.value;
-  return env && isSuccessResponse(env) ? env.data : null;
+  return isSuccessResponse(env) ? env.data : null;
 });
 
 const file = ref<File | null>(null);
@@ -19,24 +18,23 @@ const resetting = ref(false);
 
 const toast = useToast();
 
-const unwrap = <T>(res: ApiResponse<T>): T => {
-  if (!isSuccessResponse(res)) {
-    throw new Error(res.status.message || "Request failed");
-  }
-  return res.data;
-};
-
 async function ingest() {
   if (!file.value) return;
-  ingesting.value = true;
   try {
+    ingesting.value = true;
+
     const body = new FormData();
     body.append("files", file.value, file.value.name);
 
-    const res = await $fetch<ApiResponse<IngestResult>>("/api/admin/ingest", {
+    const res = await $fetch("/api/admin/ingest", {
+      headers: {
+        [headerName]: csrf,
+      },
       method: "POST",
       body,
     });
+
+    if (!isSuccessResponse(res)) throw new Error(res.status.message);
 
     const data = unwrap(res);
 
@@ -61,7 +59,7 @@ async function ingest() {
   } catch (e) {
     toast.add({
       title: "Ingest failed",
-      description: (e as Error).message,
+      description: e instanceof Error ? e.message : "Something went wrong",
       color: "error",
       icon: "i-lucide-alert-triangle",
     });
@@ -73,16 +71,21 @@ async function ingest() {
 async function reset() {
   resetting.value = true;
   try {
-    const res = await $fetch<ApiResponse<{ ok: true }>>("/api/admin/reset", {
+    const res = await $fetch("/api/admin/reset", {
+      headers: {
+        [headerName]: csrf,
+      },
       method: "POST",
     });
-    unwrap(res);
+
+    if (!isSuccessResponse(res)) throw new Error(res.status.message);
+
     await refreshStats();
     toast.add({ title: "Database reset", color: "success", icon: "i-lucide-check" });
   } catch (e) {
     toast.add({
       title: "Reset failed",
-      description: (e as Error).message,
+      description: e instanceof Error ? e.message : "Something went wrong",
       color: "error",
       icon: "i-lucide-alert-triangle",
     });
