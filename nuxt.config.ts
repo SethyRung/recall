@@ -5,13 +5,14 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ["~/assets/css/main.css"],
 
-  modules: ["@nuxt/ui", "@vueuse/nuxt", "@nuxthub/core", "@comark/nuxt"],
+  modules: ["@nuxt/ui", "@vueuse/nuxt", "@nuxthub/core", "@comark/nuxt", "nuxt-csurf"],
 
   hub: {
     db: {
       dialect: "postgresql",
       driver: (process.env.DATABASE_DRIVER as "postgres-js" | "neon-http") ?? "postgres-js",
     },
+    blob: true,
   },
 
   runtimeConfig: {
@@ -26,6 +27,10 @@ export default defineNuxtConfig({
     chunkSize: 500,
     chunkOverlap: 50,
     betterAuthSecret: "",
+  },
+
+  routeRules: {
+    "/api/auth/**": { csurf: false } as never,
   },
 
   nitro: {
