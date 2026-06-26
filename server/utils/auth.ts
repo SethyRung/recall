@@ -150,10 +150,12 @@ function getBaseURL(event?: H3Event): string {
 
 export function serverAuth(event?: H3Event) {
   const runtimeConfig = useRuntimeConfig();
+  const baseURL = getBaseURL(event);
 
   const auth = betterAuth({
     secret: runtimeConfig.betterAuthSecret,
-    baseURL: getBaseURL(event),
+    baseURL,
+    trustedOrigins: [baseURL],
     database: drizzleAdapter(db, {
       provider: "pg",
       schema: { user, session, account, verification },
