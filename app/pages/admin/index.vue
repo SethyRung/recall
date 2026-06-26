@@ -5,9 +5,8 @@ definePageMeta({ layout: "admin", middleware: ["admin"] });
 
 type Stats = { documents: number; chunks: number; lastIngest: string | null };
 
-const { data: statsEnvelope, refresh: refreshStats } = await useFetch<ApiResponse<Stats>>(
-  "/api/admin/stats",
-);
+const { data: statsEnvelope, refresh: refreshStats } =
+  await useFetch<ApiResponse<Stats>>("/api/admin/stats");
 
 const stats = computed<Stats | null>(() => {
   const env = statsEnvelope.value;
@@ -97,7 +96,7 @@ async function reset() {
   <UDashboardPanel>
     <template #body>
       <UContainer class="py-6 space-y-6">
-        <StatsPanel v-if="stats" :stats="stats" />
+        <AdminStatsPanel v-if="stats" :stats="stats" />
 
         <UPageCard title="Ingest" icon="i-lucide-database">
           <div class="space-y-4">
@@ -122,7 +121,7 @@ async function reset() {
         </UPageCard>
 
         <UPageCard title="Danger zone" icon="i-lucide-alert-triangle">
-          <ConfirmResetModal :loading="resetting" @confirm="reset" />
+          <AdminConfirmResetModal :loading="resetting" @confirm="reset" />
         </UPageCard>
       </UContainer>
     </template>

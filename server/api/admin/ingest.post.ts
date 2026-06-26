@@ -43,7 +43,11 @@ export default defineEventHandler(async (event) => {
     if (!result.ok) {
       return createResponse(
         { code: ApiResponseCode.Success },
-        { processed: 0, totalChunks: 0, errors: [{ source: filename, message: result.message ?? "" }] },
+        {
+          processed: 0,
+          totalChunks: 0,
+          errors: [{ source: filename, message: result.message ?? "" }],
+        },
       );
     }
 
