@@ -1,15 +1,10 @@
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 
 export function getModel(modelId?: string) {
   const { llmBaseUrl: baseURL, llmApiKey: apiKey, llmModel } = useRuntimeConfig();
 
-  const provider = createOpenAICompatible({
-    name: "custom-provider",
-    baseURL,
-    apiKey,
-  });
-
+  const provider = createAnthropic({ baseURL, apiKey });
   const id = modelId || llmModel;
 
   return provider(id);
