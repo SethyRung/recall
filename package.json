@@ -47,7 +47,6 @@
     "@iconify-json/logos": "^1.2.11",
     "@iconify-json/lucide": "^1.2.114",
     "@types/bun": "^1.3.14",
-    "@types/node": "^26.0.0",
     "drizzle-kit": "^0.31.10",
     "oxfmt": "^0.56.0",
     "oxlint": "^1.71.0"
