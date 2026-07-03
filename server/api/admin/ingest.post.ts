@@ -3,8 +3,15 @@ import { createResource } from "#server/utils/resource";
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ACCEPTED_EXT = /\.(md|markdown|mdown|mkd)$/i;
 
+type IngestError = { source: string; message: string };
+
 export default defineEventHandler(async (event) => {
-  const parts = await readMultipartFormData(event);
+  let parts: Awaited<ReturnType<typeof readMultipartFormData>>;
+  try {
+    parts = await readMultipartFormData(event);
+  } catch {
+    throw createError({ statusCode: 400, statusMessage: "Failed to parse multipart body" });
+  }
 
   if (!parts || parts.length === 0) {
     throw createError({ statusCode: 400, statusMessage: "No file uploaded" });
@@ -16,49 +23,47 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "No file uploaded" });
   }
 
-  const part = files[0]!;
-  const filename = part.filename ?? "untitled.md";
+  let processed = 0;
+  let totalChunks = 0;
+  const errors: IngestError[] = [];
 
-  if (!ACCEPTED_EXT.test(filename)) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Only .md/.markdown files are accepted",
-    });
-  }
+  for (const part of files) {
+    const filename = part.filename ?? "untitled.md";
 
-  if (part.data.length > MAX_FILE_SIZE) {
-    throw createError({
-      statusCode: 413,
-      statusMessage: `File exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit`,
-    });
-  }
+    try {
+      if (!ACCEPTED_EXT.test(filename)) {
+        errors.push({ source: filename, message: "Only .md/.markdown files are accepted" });
+        continue;
+      }
 
-  try {
-    const result = await createResource({
-      content: part.data.toString("utf-8"),
-      title: filename.replace(/\.[^.]+$/, ""),
-      metadata: { mimeType: "text/markdown", size: part.data.length },
-    });
+      if (part.data.length > MAX_FILE_SIZE) {
+        errors.push({
+          source: filename,
+          message: `File exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit`,
+        });
+        continue;
+      }
 
-    if (!result.ok) {
-      return createResponse(
-        { code: ApiResponseCode.Success },
-        {
-          processed: 0,
-          totalChunks: 0,
-          errors: [{ source: filename, message: result.message ?? "" }],
-        },
-      );
+      const result = await createResource({
+        content: part.data.toString("utf-8"),
+        title: filename.replace(/\.[^.]+$/, ""),
+        metadata: { mimeType: "text/markdown", size: part.data.length },
+      });
+
+      if (!result.ok) {
+        errors.push({ source: filename, message: result.message ?? "Ingest failed" });
+        continue;
+      }
+
+      processed += 1;
+      totalChunks += result.chunks;
+    } catch (e) {
+      errors.push({
+        source: filename,
+        message: e instanceof Error ? e.message : "Unexpected error",
+      });
     }
-
-    return createResponse(
-      { code: ApiResponseCode.Success },
-      { processed: 1, totalChunks: result.chunks, errors: [] },
-    );
-  } catch {
-    return createResponse(
-      { code: ApiResponseCode.InternalError, message: "Failed to ingest file" },
-      null,
-    );
   }
+
+  return createResponse({ code: ApiResponseCode.Success }, { processed, totalChunks, errors });
 });

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { isSuccessResponse } from "#shared/types";
-
 definePageMeta({ layout: "admin", middleware: ["admin"] });
 
 const { csrf, headerName } = useCsrf();
@@ -12,19 +10,21 @@ const stats = computed(() => {
   return isSuccessResponse(env) ? env.data : null;
 });
 
-const file = ref<File | null>(null);
+const files = ref<File[]>([]);
 const ingesting = ref(false);
 const resetting = ref(false);
 
 const toast = useToast();
 
 async function ingest() {
-  if (!file.value) return;
+  if (files.value.length === 0) return;
   try {
     ingesting.value = true;
 
     const body = new FormData();
-    body.append("files", file.value, file.value.name);
+    for (const file of files.value) {
+      body.append("files", file, file.name);
+    }
 
     const res = await $fetch("/api/admin/ingest", {
       headers: {
@@ -35,17 +35,17 @@ async function ingest() {
     });
 
     if (!isSuccessResponse(res)) throw new Error(res.status.message);
-
     const data = unwrap(res);
 
     if (data.processed > 0) {
       toast.add({
         title: "Ingest complete",
-        description: `${data.processed} file, ${data.totalChunks} chunks`,
+        description: `${data.processed} file(s), ${data.totalChunks} chunks`,
         color: "success",
         icon: "i-lucide-check",
       });
     }
+
     if (data.errors.length > 0) {
       toast.add({
         title: `${data.errors.length} file(s) failed`,
@@ -54,7 +54,7 @@ async function ingest() {
         icon: "i-lucide-alert-triangle",
       });
     }
-    file.value = null;
+    files.value = [];
     await refreshStats();
   } catch (e) {
     toast.add({
@@ -104,9 +104,10 @@ async function reset() {
         <UPageCard title="Ingest" icon="i-lucide-database">
           <div class="space-y-4">
             <UFileUpload
-              v-model="file"
+              v-model="files"
+              multiple
               accept=".md,.markdown,.mdown,.mkd,text/markdown,text/plain"
-              label="Drop a markdown file here"
+              label="Drop markdown files here"
               description="Or click to browse. .md files only."
               layout="list"
               position="inside"
@@ -114,9 +115,9 @@ async function reset() {
             />
             <UButton
               icon="i-lucide-upload"
-              label="Ingest file"
+              label="Ingest files"
               :loading="ingesting"
-              :disabled="!file"
+              :disabled="files.length === 0"
               block
               @click="ingest"
             />
