@@ -3,8 +3,12 @@ import { cosineDistance, desc, gt, sql } from "drizzle-orm";
 import { db } from "@nuxthub/db";
 import { chunks } from "@nuxthub/db/schema";
 
-const CHUNK_SIZE = 1000;
-const CHUNK_OVERLAP = 200;
+function getChunkParams() {
+  const { chunkSize, chunkOverlap } = useRuntimeConfig();
+  const size = Number(chunkSize ?? 500);
+  const overlap = Math.min(Number(chunkOverlap ?? 50), Math.max(0, size - 1));
+  return { CHUNK_SIZE: size, CHUNK_OVERLAP: overlap };
+}
 
 function splitBySections(markdown: string): string[] {
   const lines = markdown.split(/\r?\n/);
@@ -12,11 +16,14 @@ function splitBySections(markdown: string): string[] {
   let current: string[] = [];
 
   for (const line of lines) {
-    if (/^#{1,6}\s/.test(line) && current.length > 0) {
-      sections.push(current.join("\n").trim());
-      current = [];
+    if (/^#{1,6}\s/.test(line)) {
+      if (current.length > 0) {
+        sections.push(current.join("\n").trim());
+      }
+      current = [line];
+    } else {
+      current.push(line);
     }
-    current.push(line);
   }
 
   const tail = current.join("\n").trim();
@@ -26,30 +33,33 @@ function splitBySections(markdown: string): string[] {
 }
 
 function chunkSection(section: string): string[] {
+  const { CHUNK_SIZE, CHUNK_OVERLAP } = getChunkParams();
   if (section.length <= CHUNK_SIZE) return [section];
 
-  const chunks: string[] = [];
+  const out: string[] = [];
   let start = 0;
 
   while (start < section.length) {
-    const end = Math.min(start + CHUNK_SIZE, section.length);
+    let end = Math.min(start + CHUNK_SIZE, section.length);
     let slice = section.slice(start, end);
 
     if (end < section.length) {
-      const lastBreak = slice.search(/[.!?\n]\s*[^\s]/g);
-      if (lastBreak > CHUNK_SIZE * 0.5) {
-        slice = slice.slice(0, lastBreak + 1);
+      const breakAt = slice.slice(CHUNK_SIZE * 0.5).search(/[.!?\n]\s*[^\s]/);
+      if (breakAt >= 0) {
+        const realIndex = Math.floor(CHUNK_SIZE * 0.5) + breakAt + 2;
+        slice = slice.slice(0, realIndex);
+        end = start + slice.length;
       }
     }
 
     const trimmed = slice.trim();
-    if (trimmed) chunks.push(trimmed);
+    if (trimmed) out.push(trimmed);
 
     if (end >= section.length) break;
-    start += slice.length - CHUNK_OVERLAP;
+    start += Math.max(1, slice.length - CHUNK_OVERLAP);
   }
 
-  return chunks;
+  return out;
 }
 
 export function chunkMarkdown(markdown: string): string[] {
@@ -90,12 +100,16 @@ export async function findRelevantContent(userQuery: string) {
 
   const similarity = sql<number>`1 - (${cosineDistance(chunks.embedding, userQueryEmbedded)})`;
 
+  const { topK, similarityThreshold } = useRuntimeConfig();
+  const threshold = Number(similarityThreshold ?? 0.15);
+  const k = Number(topK ?? 5);
+
   const similarGuides = await db
     .select({ name: chunks.content, similarity })
     .from(chunks)
-    .where(gt(similarity, 0.5))
+    .where(gt(similarity, threshold))
     .orderBy((t) => desc(t.similarity))
-    .limit(4);
+    .limit(k);
 
   return similarGuides;
 }

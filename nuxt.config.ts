@@ -31,6 +31,7 @@ export default defineNuxtConfig({
 
   routeRules: {
     "/api/auth/**": { csurf: false } as never,
+    "/_nitro/tasks/**": { csurf: false } as never,
   },
 
   nitro: {

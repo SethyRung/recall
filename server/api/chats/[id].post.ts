@@ -74,13 +74,14 @@ export default defineEventHandler(async (event) => {
       const result = streamText({
         model: getModel(modelId),
         system: SYSTEM_PROMPT,
-        stopWhen: stepCountIs(5),
+        stopWhen: stepCountIs(2),
         messages: modelMessages,
         tools: {
           "Get Information": tool({
-            description: "get information from your knowledge base to answer questions.",
+            description:
+              "Get information from the knowledge base to answer questions about Sethy. Call this tool EXACTLY ONCE per turn with the user's original question (verbatim, in the same language), then synthesize a final text answer in the same turn. Do not call it again to verify, expand, or paraphrase — there is no second chance.",
             inputSchema: z.object({
-              question: z.string().describe("the users question"),
+              question: z.string().describe("the user's original question, unchanged"),
             }),
             execute: async ({ question }) => findRelevantContent(question),
           }),
