@@ -1,10 +1,11 @@
-import { blob } from "hub:blob";
+import { blob } from "@nuxthub/blob";
 import { db } from "@nuxthub/db";
 import { chats } from "@nuxthub/db/schema";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 export default defineEventHandler(async (event) => {
+  assertSameOrigin(event);
   const visitorId = getVisitorId(event);
   const { id } = await getValidatedRouterParams(event, z.object({ id: z.string() }).parse);
 

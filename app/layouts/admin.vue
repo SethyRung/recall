@@ -23,9 +23,10 @@ async function onSignOut() {
           :items="[
             {
               icon: 'i-lucide:layout-dashboard',
-              label: 'Dashboard',
+              label: 'Knowledge base',
               to: '/admin',
             },
+            { icon: 'i-lucide-settings', label: 'Settings', to: '/admin/settings' },
           ]"
           :collapsed="collapsed"
           orientation="vertical"

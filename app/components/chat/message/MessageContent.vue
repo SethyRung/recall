@@ -25,14 +25,25 @@ const emit = defineEmits<{
       :streaming="isPartStreaming(part)"
       chevron="leading"
     >
-      <ChatComark :markdown="part.text" :streaming="isPartStreaming(part)" />
+      <ChatComark :value="part.text" :streaming="isPartStreaming(part)" />
     </UChatReasoning>
 
     <template v-else-if="isToolUIPart(part)">
       <ChatToolRag
-        v-if="getToolName(part) === 'Get Information'"
+        v-if="['get_information', 'Get Information'].includes(getToolName(part))"
         :input="(part as { input?: { question?: string } }).input"
-        :output="(part as { output?: Array<{ name: string; similarity: number }> }).output"
+        :output="
+          (
+            part as {
+              output?: Array<{
+                content?: string;
+                name?: string;
+                similarity: number;
+                documentTitle?: string | null;
+              }>;
+            }
+          ).output
+        "
         :state="(part as { state?: 'input-available' | 'output-available' | 'output-error' }).state"
       />
     </template>
@@ -40,7 +51,7 @@ const emit = defineEmits<{
     <template v-else-if="isTextUIPart(part)">
       <ChatComark
         v-if="message.role === 'assistant'"
-        :markdown="part.text"
+        :value="part.text"
         :streaming="isPartStreaming(part)"
       />
       <template v-else-if="message.role === 'user'">
@@ -57,4 +68,17 @@ const emit = defineEmits<{
       </template>
     </template>
   </template>
+  <div
+    v-if="message.role === 'assistant' && getMessageCitations(message).length"
+    class="mt-3 flex flex-wrap gap-2"
+  >
+    <UBadge
+      v-for="title in getMessageCitations(message)"
+      :key="title"
+      :label="title"
+      icon="i-lucide-file-text"
+      color="neutral"
+      variant="subtle"
+    />
+  </div>
 </template>

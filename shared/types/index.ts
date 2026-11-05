@@ -1,3 +1,3 @@
 export * from "./db";
-export * from "./ingest";
+export * from "./admin";
 export * from "./response";

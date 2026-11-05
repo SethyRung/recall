@@ -6,7 +6,8 @@ const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
 export function getVisitorId(event: H3Event): string {
   const existing = getCookie(event, VISITOR_COOKIE);
-  if (existing) return existing;
+  if (existing && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(existing))
+    return existing;
 
   const id = crypto.randomUUID();
 

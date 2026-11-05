@@ -15,6 +15,13 @@
       "when": 1793854605931,
       "tag": "0001_living_greymalkin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793865765956,
+      "tag": "0002_lying_radioactive_man",
+      "breakpoints": true
     }
   ]
 }

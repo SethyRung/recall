@@ -16,18 +16,7 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    resendApiKey: "",
-    resendFromEmail: "",
-    llmBaseUrl: "",
-    llmApiKey: "",
-    llmModel: "",
-    embedBaseUrl: "",
-    embedApiKey: "",
-    embedModel: "",
-    topK: 5,
-    similarityThreshold: 0.3,
-    chunkSize: 500,
-    chunkOverlap: 50,
+    trustProxyHeaders: false,
   },
 
   auth: {

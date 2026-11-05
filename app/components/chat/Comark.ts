@@ -1,3 +1,5 @@
+import { defineMarkdownComponent } from "@comark/vue";
+import security from "comark/plugins/security";
 import highlight from "@comark/nuxt/plugins/highlight";
 import html from "@shikijs/langs/html";
 import css from "@shikijs/langs/css";
@@ -19,9 +21,10 @@ import toml from "@shikijs/langs/toml";
 import graphql from "@shikijs/langs/graphql";
 import SourceLink from "./SourceLink.vue";
 
-export default defineComarkComponent({
+export default defineMarkdownComponent({
   name: "ChatComark",
   plugins: [
+    security({ blockedTags: ["script", "style", "iframe", "object", "embed", "form"] }),
     highlight({
       languages: [
         html,

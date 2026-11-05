@@ -1,124 +1,142 @@
 <script setup lang="ts">
-definePageMeta({ layout: "admin" });
+import type { TabsItem } from "@nuxt/ui";
 
-const { data: statsEnvelope, refresh: refreshStats } = await useFetch("/api/admin/stats");
+const KNOWLEDGE_SECTIONS = [
+  { label: "Overview", value: "overview", icon: "i-lucide-chart-no-axes-combined" },
+  { label: "Sources", value: "sources", icon: "i-lucide-files" },
+  { label: "Test retrieval", value: "retrieval", icon: "i-lucide-search" },
+  { label: "Maintenance", value: "maintenance", icon: "i-lucide-triangle-alert" },
+] satisfies TabsItem[];
 
-const stats = computed(() => {
-  const env = statsEnvelope.value;
-  return isSuccessResponse(env) ? env.data : null;
-});
+const { section } = useAdminSection(KNOWLEDGE_SECTIONS);
 
-const files = ref<File[]>([]);
-const ingesting = ref(false);
-const resetting = ref(false);
-
-const toast = useToast();
-
-async function ingest() {
-  if (files.value.length === 0) return;
-  try {
-    ingesting.value = true;
-
-    const body = new FormData();
-    for (const file of files.value) {
-      body.append("files", file, file.name);
-    }
-
-    const res = await $fetch("/api/admin/ingest", {
-      method: "POST",
-      body,
-    });
-
-    if (!isSuccessResponse(res)) throw new Error(res.status.message);
-    const data = unwrap(res);
-
-    if (data.processed > 0) {
-      toast.add({
-        title: "Ingest complete",
-        description: `${data.processed} file(s), ${data.totalChunks} chunks`,
-        color: "success",
-        icon: "i-lucide-check",
-      });
-    }
-
-    if (data.errors.length > 0) {
-      toast.add({
-        title: `${data.errors.length} file(s) failed`,
-        description: data.errors.map((e) => `${e.source}: ${e.message}`).join("\n"),
-        color: "warning",
-        icon: "i-lucide-alert-triangle",
-      });
-    }
-    files.value = [];
-    await refreshStats();
-  } catch (e) {
-    toast.add({
-      title: "Ingest failed",
-      description: e instanceof Error ? e.message : "Something went wrong",
-      color: "error",
-      icon: "i-lucide-alert-triangle",
-    });
-  } finally {
-    ingesting.value = false;
-  }
+function sectionAttrs(value: string | number | undefined) {
+  return { "data-admin-section": String(value ?? "") };
 }
 
-async function reset() {
-  resetting.value = true;
-  try {
-    const res = await $fetch("/api/admin/reset", {
-      method: "POST",
-    });
+definePageMeta({
+  layout: "admin",
+  auth: { only: "user", user: { role: "admin" }, redirectTo: "/auth" },
+});
 
-    if (!isSuccessResponse(res)) throw new Error(res.status.message);
+useHead({ title: "Knowledge base" });
 
-    await refreshStats();
-    toast.add({ title: "Database reset", color: "success", icon: "i-lucide-check" });
-  } catch (e) {
-    toast.add({
-      title: "Reset failed",
-      description: e instanceof Error ? e.message : "Something went wrong",
-      color: "error",
-      icon: "i-lucide-alert-triangle",
-    });
-  } finally {
-    resetting.value = false;
-  }
+const emptyStats: AdminStats = {
+  documents: 0,
+  chunks: 0,
+  emptyDocuments: 0,
+  totalChars: 0,
+  avgChunksPerDoc: 0,
+  lastIngest: null,
+  pipeline: {
+    llm: { model: null, configured: false },
+    embed: {
+      model: null,
+      configured: false,
+      topK: 5,
+      similarityThreshold: 0.3,
+      chunkSize: 500,
+      chunkOverlap: 50,
+      dimensions: 2048,
+      hybrid: true,
+      rerank: false,
+    },
+  },
+};
+
+const {
+  data: stats,
+  refresh: refreshStats,
+  status: statsStatus,
+} = await useFetch<AdminStats>("/api/admin/stats", {
+  default: () => emptyStats,
+});
+
+const {
+  data: documents,
+  refresh: refreshDocuments,
+  status: documentsStatus,
+} = await useFetch("/api/admin/documents", {
+  default: () => [],
+});
+
+const loading = computed(
+  () => statsStatus.value === "pending" || documentsStatus.value === "pending",
+);
+
+async function refreshAll() {
+  await Promise.all([refreshStats(), refreshDocuments()]);
 }
 </script>
 
 <template>
-  <UDashboardPanel>
+  <UDashboardPanel id="knowledge-base" :ui="{ body: 'p-0' }">
+    <template #header>
+      <UDashboardNavbar title="Knowledge base">
+        <template #leading><UDashboardSidebarCollapse /></template>
+        <template #right><UColorModeButton /></template>
+      </UDashboardNavbar>
+      <UDashboardToolbar>
+        <template #left>
+          <UBadge :label="`${stats?.documents ?? 0} documents`" color="neutral" variant="subtle" />
+          <UBadge :label="`${stats?.chunks ?? 0} chunks`" color="neutral" variant="subtle" />
+        </template>
+        <template #right>
+          <UButton
+            label="Refresh"
+            icon="i-lucide-refresh-cw"
+            color="neutral"
+            variant="outline"
+            :loading="loading"
+            @click="refreshAll"
+          />
+        </template>
+      </UDashboardToolbar>
+    </template>
     <template #body>
-      <UContainer class="py-6 space-y-6">
-        <AdminStatsPanel v-if="stats" :stats="stats" />
-
-        <UPageCard title="Ingest" icon="i-lucide-database">
-          <div class="space-y-4">
-            <UFileUpload
-              v-model="files"
-              multiple
-              accept=".md,.markdown,.mdown,.mkd,text/markdown,text/plain"
-              label="Drop markdown files here"
-              description="Or click to browse. .md files only."
-              layout="list"
-              position="inside"
-              class="w-full"
-            />
-            <UButton
-              icon="i-lucide-upload"
-              label="Ingest files"
-              :loading="ingesting"
-              :disabled="files.length === 0"
-              block
-              @click="ingest"
-            />
-          </div>
-        </UPageCard>
-
-        <UPageCard title="Danger zone" icon="i-lucide-alert-triangle">
-          <AdminConfirmResetModal :loading="resetting" @confirm="reset" />
-        </UPageCard>
+      <UContainer class="w-full max-w-6xl py-6 space-y-6">
+        <USelect
+          v-model="section"
+          :items="KNOWLEDGE_SECTIONS"
+          aria-label="Knowledge section"
+          class="w-full sm:hidden"
+        />
+        <UTabs
+          v-model="section"
+          :items="KNOWLEDGE_SECTIONS"
+          :unmount-on-hide="false"
+          variant="link"
+          :ui="{
+            list: 'hidden sm:flex',
+            content: 'space-y-6',
+          }"
+        >
+          <template #content="{ item }">
+            <div v-bind="sectionAttrs(item.value)" class="space-y-6">
+              <template v-if="item.value === 'overview'">
+                <AdminStatGrid :stats="stats ?? emptyStats" />
+                <AdminPipeline :pipeline="(stats ?? emptyStats).pipeline" />
+              </template>
+              <template v-else-if="item.value === 'sources'">
+                <AdminIngest @ingested="refreshAll" />
+                <AdminDocuments
+                  :documents="documents ?? []"
+                  :loading="loading"
+                  @changed="refreshAll"
+                />
+              </template>
+              <template v-else-if="item.value === 'retrieval'">
+                <AdminRetrieve
+                  :configured="(stats ?? emptyStats).pipeline.embed.configured"
+                  :has-chunks="(stats ?? emptyStats).chunks > 0"
+                />
+              </template>
+              <template v-else-if="item.value === 'maintenance'">
+                <AdminDanger @reset="refreshAll" />
+              </template>
+            </div>
+          </template>
+        </UTabs>
       </UContainer>
     </template>
   </UDashboardPanel>

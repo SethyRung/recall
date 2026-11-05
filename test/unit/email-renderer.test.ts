@@ -1,9 +1,11 @@
-import { describe, expect, test } from "bun:test";
+import { readFile } from "node:fs/promises";
+import { describe, expect, test } from "vitest";
 import { renderEmail } from "../../server/utils/email-renderer";
 
-const template = await Bun.file(
+const template = await readFile(
   new URL("../../server/assets/emails/password-reset.md", import.meta.url),
-).text();
+  "utf8",
+);
 
 describe("password reset email rendering", () => {
   test("binds the same reset URL to the button and fallback without exposing Comark syntax", async () => {

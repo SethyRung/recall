@@ -1,7 +1,12 @@
 <script setup lang="ts">
 interface ChatToolRagProps {
   input?: { question?: string };
-  output?: Array<{ name: string; similarity: number }>;
+  output?: Array<{
+    content?: string;
+    name?: string;
+    similarity: number;
+    documentTitle?: string | null;
+  }>;
   state?: "input-available" | "output-available" | "output-error";
 }
 
@@ -11,7 +16,12 @@ const isStreaming = computed(() => props.state === "input-available" || !props.s
 const hasOutput = computed(() => props.state === "output-available" && !!props.output?.length);
 
 const query = computed(() => props.input?.question);
-const count = computed(() => props.output?.length ?? 0);
+const count = computed(
+  () =>
+    new Set(props.output?.map((hit) => hit.documentTitle).filter(Boolean)).size ||
+    props.output?.length ||
+    0,
+);
 
 const label = computed(() => {
   if (isStreaming.value) return "Searching Sethy's notes...";

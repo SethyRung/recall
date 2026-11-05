@@ -1,115 +1,168 @@
 import { embed, embedMany } from "ai";
-import { cosineDistance, desc, gt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "@nuxthub/db";
-import { chunks } from "@nuxthub/db/schema";
+import { chunks, documents } from "@nuxthub/db/schema";
+import type { AppSettings } from "../../shared/utils/settings";
 
-function getChunkParams() {
-  const { chunkSize, chunkOverlap } = useRuntimeConfig();
-  const size = Number(chunkSize ?? 500);
-  const overlap = Math.min(Number(chunkOverlap ?? 50), Math.max(0, size - 1));
-  return { CHUNK_SIZE: size, CHUNK_OVERLAP: overlap };
-}
+import { chunkMarkdown } from "./chunking";
+import { RagError } from "./errors";
+import { rankRetrievalHits } from "./retrieval";
 
-function splitBySections(markdown: string): string[] {
-  const lines = markdown.split(/\r?\n/);
-  const sections: string[] = [];
-  let current: string[] = [];
-
-  for (const line of lines) {
-    if (/^#{1,6}\s/.test(line)) {
-      if (current.length > 0) {
-        sections.push(current.join("\n").trim());
-      }
-      current = [line];
-    } else {
-      current.push(line);
-    }
-  }
-
-  const tail = current.join("\n").trim();
-  if (tail) sections.push(tail);
-
-  return sections.filter((s) => s.length > 0);
-}
-
-function chunkSection(section: string): string[] {
-  const { CHUNK_SIZE, CHUNK_OVERLAP } = getChunkParams();
-  if (section.length <= CHUNK_SIZE) return [section];
-
-  const out: string[] = [];
-  let start = 0;
-
-  while (start < section.length) {
-    let end = Math.min(start + CHUNK_SIZE, section.length);
-    let slice = section.slice(start, end);
-
-    if (end < section.length) {
-      const breakAt = slice.slice(CHUNK_SIZE * 0.5).search(/[.!?\n]\s*[^\s]/);
-      if (breakAt >= 0) {
-        const realIndex = Math.floor(CHUNK_SIZE * 0.5) + breakAt + 2;
-        slice = slice.slice(0, realIndex);
-        end = start + slice.length;
-      }
-    }
-
-    const trimmed = slice.trim();
-    if (trimmed) out.push(trimmed);
-
-    if (end >= section.length) break;
-    start += Math.max(1, slice.length - CHUNK_OVERLAP);
-  }
-
-  return out;
-}
-
-export function chunkMarkdown(markdown: string): string[] {
-  return splitBySections(markdown).flatMap(chunkSection);
-}
-
-export async function generateEmbeddings(value: string) {
-  const model = getEmbeddingModel();
-  const values = chunkMarkdown(value);
+export async function generateEmbeddings(value: string, settings: AppSettings) {
+  const model = getEmbeddingModel(settings);
+  const values = chunkMarkdown(value, settings);
+  const { maxChunks } = getRagDefaults(settings);
 
   if (values.length === 0) return [];
+  if (values.length > maxChunks) {
+    throw new RagError(`Too many chunks (${values.length}; max ${maxChunks})`);
+  }
 
   const { embeddings } = await embedMany({
     model,
     values,
+    maxRetries: 0,
+    maxParallelCalls: 2,
+    abortSignal: AbortSignal.timeout(60_000),
   });
 
+  if (
+    embeddings.length !== values.length ||
+    embeddings.some(
+      (embedding) =>
+        embedding.length !== 2048 || embedding.some((value) => !Number.isFinite(value)),
+    )
+  ) {
+    throw new RagError("Embedding model must return 2048 finite dimensions");
+  }
   return embeddings.map((e, i) => ({
     embedding: e,
     content: values[i] || "",
+    chunkIndex: i,
   }));
 }
 
-export async function generateEmbedding(input: string) {
-  const model = getEmbeddingModel();
+export async function generateEmbedding(
+  input: string,
+  settings: AppSettings,
+  signal?: AbortSignal,
+) {
+  const model = getEmbeddingModel(settings);
   const value = input.replaceAll("\\n", " ");
 
   const { embedding } = await embed({
     model,
     value,
+    maxRetries: 0,
+    abortSignal: signal
+      ? AbortSignal.any([signal, AbortSignal.timeout(60_000)])
+      : AbortSignal.timeout(60_000),
   });
 
+  if (embedding.length !== 2048 || embedding.some((value) => !Number.isFinite(value))) {
+    throw new RagError("Embedding model must return 2048 finite dimensions");
+  }
   return embedding;
 }
 
-export async function findRelevantContent(userQuery: string) {
-  const userQueryEmbedded = await generateEmbedding(userQuery);
+function getRetrievalParams(settings: AppSettings) {
+  const { similarityThreshold, topK } = getRagDefaults(settings);
+  return {
+    threshold: similarityThreshold,
+    k: topK,
+  };
+}
 
-  const similarity = sql<number>`1 - (${cosineDistance(chunks.embedding, userQueryEmbedded)})`;
+export async function searchChunks(userQuery: string, settings: AppSettings, signal?: AbortSignal) {
+  const identity = getEmbeddingIdentity(settings);
+  const compatibleEmbedding = sql`(coalesce(${documents.metadata}->>'embedIdentity' = ${identity}, false) or (${documents.metadata}->>'embedIdentity' is null and coalesce(${documents.metadata}->>'embedModel', '') = ${settings.embed.model}))`;
+  const [incompatible] = await db
+    .select({ id: documents.id })
+    .from(documents)
+    .where(sql`not (${compatibleEmbedding})`)
+    .limit(1);
+  if (incompatible)
+    throw new RagError(
+      "Knowledge base embedding configuration is incompatible. Re-ingest documents.",
+    );
+  const userQueryEmbedded = await generateEmbedding(userQuery, settings, signal);
+  const distance = sql`(${chunks.embedding}::halfvec(2048)) <=> ${JSON.stringify(userQueryEmbedded)}::halfvec(2048)`;
+  const similarity = sql<number>`1 - (${distance})`.mapWith(Number);
+  const { threshold, k } = getRetrievalParams(settings);
+  const { hybrid, rerank } = getRagDefaults(settings);
 
-  const { topK, similarityThreshold } = useRuntimeConfig();
-  const threshold = Number(similarityThreshold ?? 0.15);
-  const k = Number(topK ?? 5);
+  const candidateLimit = Math.max(k * 3, 20);
+  if (!hybrid) {
+    const rows = await db
+      .select({
+        id: chunks.id,
+        content: chunks.content,
+        similarity,
+        documentId: chunks.documentId,
+        documentTitle: documents.title,
+      })
+      .from(chunks)
+      .innerJoin(documents, eq(documents.id, chunks.documentId))
+      .where(compatibleEmbedding)
+      .orderBy(asc(distance))
+      .limit(rerank ? candidateLimit : k);
 
-  const similarGuides = await db
-    .select({ name: chunks.content, similarity })
+    const hits = rankRetrievalHits(userQuery, rows, [], { threshold, k, hybrid: false, rerank });
+
+    return {
+      threshold,
+      topK: k,
+      hits,
+    };
+  }
+
+  const vectorRows = await db
+    .select({
+      id: chunks.id,
+      content: chunks.content,
+      similarity,
+      documentId: chunks.documentId,
+      documentTitle: documents.title,
+    })
     .from(chunks)
-    .where(gt(similarity, threshold))
-    .orderBy((t) => desc(t.similarity))
-    .limit(k);
+    .innerJoin(documents, eq(documents.id, chunks.documentId))
+    .where(compatibleEmbedding)
+    .orderBy(asc(distance))
+    .limit(candidateLimit);
 
-  return similarGuides;
+  const ftsQuery = sql`plainto_tsquery('simple', ${userQuery})`;
+  const ftsRank =
+    sql<number>`ts_rank_cd(to_tsvector('simple', ${chunks.content}), ${ftsQuery})`.mapWith(Number);
+
+  let lexicalRows: {
+    id: string;
+    content: string;
+    similarity: number;
+    documentId: string;
+    documentTitle: string;
+  }[] = [];
+
+  try {
+    lexicalRows = await db
+      .select({
+        id: chunks.id,
+        content: chunks.content,
+        similarity,
+        documentId: chunks.documentId,
+        documentTitle: documents.title,
+      })
+      .from(chunks)
+      .innerJoin(documents, eq(documents.id, chunks.documentId))
+      .where(and(compatibleEmbedding, sql`to_tsvector('simple', ${chunks.content}) @@ ${ftsQuery}`))
+      .orderBy(desc(ftsRank))
+      .limit(candidateLimit);
+  } catch {
+    lexicalRows = [];
+  }
+
+  return {
+    threshold,
+    topK: k,
+    hits: rankRetrievalHits(userQuery, vectorRows, lexicalRows, { threshold, k, hybrid, rerank }),
+  };
 }

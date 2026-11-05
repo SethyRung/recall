@@ -1,5 +1,6 @@
 import {
   pgTable,
+  integer,
   uuid,
   text,
   timestamp,
@@ -9,25 +10,45 @@ import {
   index,
   primaryKey,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
+
+export const appSettings = pgTable("app_settings", {
+  id: integer("id").primaryKey(),
+  value: jsonb("value").notNull(),
+  secrets: jsonb("secrets").$type<Record<string, string>>().notNull(),
+  version: integer("version").notNull().default(1),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedBy: text("updated_by"),
+});
 
 export const documents = pgTable("documents", {
   id: uuid("id").primaryKey().defaultRandom(),
-  title: text("title"),
+  title: text("title").notNull().unique(),
   metadata: jsonb("metadata"),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const chunks = pgTable("chunks", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  documentId: uuid("document_id")
-    .notNull()
-    .references(() => documents.id, { onDelete: "cascade" }),
-  content: text("content").notNull(),
-  embedding: vector("embedding", { dimensions: 2048 }).notNull(),
-});
+export const chunks = pgTable(
+  "chunks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    documentId: uuid("document_id")
+      .notNull()
+      .references(() => documents.id, { onDelete: "cascade" }),
+    content: text("content").notNull(),
+    embedding: vector("embedding", { dimensions: 2048 }).notNull(),
+    chunkIndex: integer("chunk_index").notNull(),
+  },
+  (table) => [
+    index("chunks_embedding_hnsw_idx").using(
+      "hnsw",
+      sql`(${table.embedding}::halfvec(2048)) halfvec_cosine_ops`,
+    ),
+    index("chunks_content_fts_idx").using("gin", sql`to_tsvector('simple', ${table.content})`),
+  ],
+);
 
 export const chats = pgTable(
   "chats",

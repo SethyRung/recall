@@ -72,13 +72,19 @@ const chat = new Chat({
     api: `/api/chats/${chatData.value!.id}`,
     prepareSendMessagesRequest: ({ messages }) => ({
       body: {
-        messages: messages.map((message) => ({
+        messages: messages.slice(-1).map((message) => ({
           ...message,
           parts: message.parts.filter((part) => part.type === "text"),
         })),
       },
     }),
   }),
+  async onFinish() {
+    if (!title.value) {
+      await refreshNuxtData(`chat-${route.params.id}`);
+      await refreshNuxtData("chats");
+    }
+  },
   onError(error) {
     let message = error.message;
     if (typeof message === "string" && message[0] === "{") {

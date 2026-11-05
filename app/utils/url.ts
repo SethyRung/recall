@@ -1,6 +1,6 @@
 export function getFileName(url: string): string {
   try {
-    const urlObj = new URL(url);
+    const urlObj = new URL(url, "http://local.invalid");
     const pathname = urlObj.pathname;
     const filename = pathname.split("/").pop() || "file";
     return decodeURIComponent(filename);

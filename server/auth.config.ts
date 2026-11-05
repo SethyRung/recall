@@ -1,18 +1,20 @@
 import { defineServerAuth } from "@nuxtjs/better-auth/config";
 import { admin } from "better-auth/plugins";
+import { getDecryptedSettings } from "./utils/settings";
 import { sendPasswordResetEmail } from "./utils/password-reset-email";
 
-export default defineServerAuth(({ runtimeConfig }) => ({
+export default defineServerAuth(() => ({
   emailAndPassword: {
     enabled: true,
     autoSignIn: false,
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
+      const settings = await getDecryptedSettings();
       await sendPasswordResetEmail({
         to: user.email,
         url,
-        apiKey: runtimeConfig.resendApiKey,
-        from: runtimeConfig.resendFromEmail,
+        apiKey: settings.email.apiKey,
+        from: settings.email.from,
       });
     },
     customSyntheticUser: ({ coreFields, additionalFields, id }) => ({
