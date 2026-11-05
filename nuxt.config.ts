@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ["~/assets/css/main.css"],
 
-  modules: ["@nuxt/ui", "@vueuse/nuxt", "@nuxthub/core", "@comark/nuxt", "nuxt-csurf"],
+  modules: ["@nuxt/ui", "@vueuse/nuxt", "@nuxthub/core", "@nuxtjs/better-auth", "@comark/nuxt"],
 
   hub: {
     db: {
@@ -26,12 +26,25 @@ export default defineNuxtConfig({
     similarityThreshold: 0.3,
     chunkSize: 500,
     chunkOverlap: 50,
-    betterAuthSecret: "",
+  },
+
+  auth: {
+    schema: {
+      casing: "snake_case",
+    },
+    redirects: {
+      login: "/auth",
+      guest: "/",
+      authenticated: "/",
+      logout: "/",
+    },
   },
 
   routeRules: {
-    "/api/auth/**": { csurf: false } as never,
-    "/_nitro/tasks/**": { csurf: false } as never,
+    "/admin": { auth: { user: { role: "admin" } } },
+    "/admin/**": { auth: { user: { role: "admin" } } },
+    "/api/admin/**": { auth: { user: { role: "admin" } } },
+    "/auth": { auth: "guest" },
   },
 
   nitro: {

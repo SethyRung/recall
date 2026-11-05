@@ -1,11 +1,8 @@
 <script setup lang="ts">
-const { data } = await useSession(useFetch);
-
-const user = computed(() => data.value?.user);
+const { user, signOut } = useUserSession();
 
 async function onSignOut() {
   await signOut();
-  await navigateTo("/admin/login");
 }
 </script>
 

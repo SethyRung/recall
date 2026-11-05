@@ -1,9 +1,7 @@
 <script setup lang="ts">
-definePageMeta({ layout: "admin", middleware: ["admin"] });
+definePageMeta({ layout: "admin" });
 
-const { csrf, headerName } = useCsrf();
-
-const { data: statsEnvelope, refresh: refreshStats } = await useCsrfFetch("/api/admin/stats");
+const { data: statsEnvelope, refresh: refreshStats } = await useFetch("/api/admin/stats");
 
 const stats = computed(() => {
   const env = statsEnvelope.value;
@@ -27,9 +25,6 @@ async function ingest() {
     }
 
     const res = await $fetch("/api/admin/ingest", {
-      headers: {
-        [headerName]: csrf,
-      },
       method: "POST",
       body,
     });
@@ -72,9 +67,6 @@ async function reset() {
   resetting.value = true;
   try {
     const res = await $fetch("/api/admin/reset", {
-      headers: {
-        [headerName]: csrf,
-      },
       method: "POST",
     });
 

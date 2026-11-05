@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { user as userTable } from "#server/db/schema";
+import { user as userTable } from "#auth/schema";
 
 const inputSchema = z.object({
   email: z.email(),
@@ -32,7 +32,7 @@ export default defineTask({
       throw new Error(`User already exists: ${parsed.data.email}`);
     }
 
-    const auth = serverAuth();
+    const auth = await ensureServerAuth();
     const created = await auth.api.signUpEmail({
       body: {
         email: parsed.data.email,

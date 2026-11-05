@@ -26,11 +26,8 @@ export function useFileUploadWithStatus(chatId: string) {
   const files = ref<FileWithStatus[]>([]);
   const toast = useToast();
 
-  const { csrf, headerName } = useCsrf();
-
   const upload = useUpload(`/api/upload/${chatId}`, {
     method: "PUT",
-    headers: { [headerName]: csrf },
   });
 
   async function uploadFiles(newFiles: File[]) {
@@ -113,7 +110,6 @@ export function useFileUploadWithStatus(chatId: string) {
     if (file.status === "uploaded" && file.uploadedPathname) {
       $fetch(`/api/upload/${file.uploadedPathname}` as string, {
         method: "DELETE",
-        headers: { [headerName]: csrf },
       }).catch((error) => {
         console.error("Failed to delete file from blob:", error);
       });

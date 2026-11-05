@@ -3,20 +3,6 @@ import type { TabsItem } from "@nuxt/ui";
 
 definePageMeta({ layout: "empty" });
 
-const { redirect } = useAuthRedirect();
-
-const { data: session } = await useSession(useFetch);
-
-watch(
-  session,
-  (sess) => {
-    if (sess?.user) {
-      navigateTo(redirect.value || "/");
-    }
-  },
-  { immediate: true },
-);
-
 const items: TabsItem[] = [
   {
     label: "Sign in",

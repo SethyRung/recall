@@ -9,8 +9,6 @@ const input = ref("");
 const loading = ref(false);
 const chatId = crypto.randomUUID();
 
-const { csrf, headerName } = useCsrf();
-
 const { dropzoneRef, dragging, open, files, uploading, uploadedFiles, removeFile, clearFiles } =
   useFileUploadWithStatus(chatId);
 
@@ -29,7 +27,6 @@ async function createChat(prompt: string) {
   try {
     const res = await $fetch<ApiResponse<{ id: string }>>("/api/chats", {
       method: "POST",
-      headers: { [headerName]: csrf },
       body: {
         id: chatId,
         message: {

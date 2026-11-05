@@ -4,10 +4,7 @@ import type { DropdownMenuItem } from "@nuxt/ui";
 
 type ChatSummary = { id: string; title: string | null; createdAt: Date };
 
-const { data: session } = await useSession(useFetch);
-
-const user = computed(() => session.value?.user);
-const isSignedIn = computed(() => !!user.value && !user.value.isAnonymous);
+const { user, loggedIn: isSignedIn, signOut } = useUserSession();
 
 const sidebarOpen = ref(false);
 const searchOpen = ref(false);
@@ -21,7 +18,6 @@ const userMenuItems = computed<DropdownMenuItem[]>(
         color: "error" as const,
         onSelect: async () => {
           await signOut();
-          await navigateTo("/");
         },
       },
       !isSignedIn.value && {

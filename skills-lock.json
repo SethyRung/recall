@@ -1,52 +1,26 @@
 {
   "version": 1,
   "skills": {
-    "agent-browser": {
-      "source": "vercel-labs/agent-browser",
-      "sourceType": "github",
-      "skillPath": "skills/agent-browser/SKILL.md",
-      "computedHash": "228f87d57035100d9dc6efcfc05aafd4b6e3962adacaa04b8217ab2fadb15dc8"
-    },
-    "better-auth-best-practices": {
-      "source": "better-auth/skills",
-      "sourceType": "github",
-      "skillPath": "better-auth/best-practices/SKILL.md",
-      "computedHash": "a4c830509e85557b59339d8d93a4e243e9e59c686e7678854d39230e12c2a6dc"
-    },
     "comark": {
       "source": "comark.dev",
+      "sourceUrl": "https://comark.dev",
       "sourceType": "well-known",
-      "computedHash": "c6b35ca32e1dd0f50b3bf1c1f780e23d984ba541ded9534176d3fbb337b9aec7"
+      "computedHash": "2a95a8efa065ece63c71f10ab6b4d029bb2b23c1321f29d98cfaaeb61f02779e",
+      "wellKnownDigest": "sha256:4fad2abf6016aed43428e6d91a1da85cbfb1e7e37f0ed2c6c2cdf8fcfb6bcf1e"
     },
-    "create-auth-skill": {
-      "source": "better-auth/skills",
-      "sourceType": "github",
-      "skillPath": "better-auth/create-auth/SKILL.md",
-      "computedHash": "31c027d02dbf1faa37f58191f574b9443143042fb2b684fe32df53ab0270487c"
+    "migrate-mdc-to-comark": {
+      "source": "comark.dev",
+      "sourceUrl": "https://comark.dev",
+      "sourceType": "well-known",
+      "computedHash": "bb12957e65ed494b8af23e773d3d92560da7be3291eff53dab65a886c91cc174",
+      "wellKnownDigest": "sha256:4b7c4dfaa23b3ca54bc92a4709df2b0202edf83d326a0ab3a55878b6c3293983"
     },
-    "email-and-password-best-practices": {
-      "source": "better-auth/skills",
-      "sourceType": "github",
-      "skillPath": "better-auth/emailAndPassword/SKILL.md",
-      "computedHash": "747d7f73bd9e2ec5317b8ef88dc70f97df716d00e3d02de4051feebaa48b062d"
-    },
-    "nuxt-ui": {
-      "source": "nuxt/ui",
-      "sourceType": "github",
-      "skillPath": "skills/nuxt-ui/SKILL.md",
-      "computedHash": "de41e63eeda35c2bfdd3ed783d3e04361dc85bff28ad71f9c4dbdc01bb8f4e57"
-    },
-    "organization-best-practices": {
-      "source": "better-auth/skills",
-      "sourceType": "github",
-      "skillPath": "better-auth/organization/SKILL.md",
-      "computedHash": "79a5a85b43d10e9fe37582b3506b051a33a991817b938f349099baa5ddba21aa"
-    },
-    "two-factor-authentication-best-practices": {
-      "source": "better-auth/skills",
-      "sourceType": "github",
-      "skillPath": "better-auth/twoFactor/SKILL.md",
-      "computedHash": "7e297aaf887e11fdc03e52bdbf44974e161e8f7c393170ced7dc66cace4f6d46"
+    "nuxt-better-auth": {
+      "source": "better-auth.nuxt.dev",
+      "sourceUrl": "https://better-auth.nuxt.dev/",
+      "sourceType": "well-known",
+      "computedHash": "d39f34c565b863c253f39cc55251067539b2245b62685936c9e37687c7fb0449",
+      "wellKnownDigest": "sha256:9ef82d82aa2ec4f83d9973d3397157085629f1ed87edfac1cab1b4816d948840"
     }
   }
 }

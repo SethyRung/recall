@@ -2,7 +2,7 @@
 import { z } from "zod";
 import type { FormSubmitEvent } from "@nuxt/ui";
 
-const { redirect } = useAuthRedirect();
+const signIn = useSignIn("email");
 const toast = useToast();
 
 const schema = z.object({
@@ -24,21 +24,19 @@ async function onSubmit(event: FormSubmitEvent<SignInInput>) {
 
     const { data } = event;
 
-    const { error: err } = await signIn.email({
+    await signIn.execute({
       email: data.email,
       password: data.password,
     });
-    if (err) {
+    if (signIn.error.value) {
       toast.add({
         title: "Sign in failed",
-        description: err.message ?? "Invalid email or password",
+        description: signIn.error.value.message ?? "Invalid email or password",
         color: "error",
         icon: "i-lucide-alert-triangle",
       });
       return;
     }
-
-    await navigateTo(redirect.value || "/");
   } catch (e) {
     toast.add({
       title: "Sign in failed",

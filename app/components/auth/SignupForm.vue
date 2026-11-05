@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { FormSubmitEvent } from "@nuxt/ui";
 
 const { redirect } = useAuthRedirect();
+const signUp = useSignUp("email");
 const toast = useToast();
 
 const schema = z
@@ -36,15 +37,15 @@ async function onSubmit(event: FormSubmitEvent<SignUpInput>) {
 
     const { data } = event;
 
-    const { error: err } = await signUp.email({
+    await signUp.execute({
       email: data.email,
       password: data.password,
       name: data.name,
     });
-    if (err) {
+    if (signUp.error.value) {
       toast.add({
         title: "Sign up failed",
-        description: err.message ?? "Could not create your account",
+        description: signUp.error.value.message ?? "Could not create your account",
         color: "error",
         icon: "i-lucide-alert-triangle",
       });

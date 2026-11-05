@@ -10,7 +10,7 @@ chunks from Postgres + pgvector and streams a grounded answer back.
 - **@nuxt/ui v4** (Reka UI + Tailwind v4) for the UI
 - **AI SDK v6** for chat + embedding model calls
 - **@comark/nuxt** for streaming markdown rendering
-- **Better Auth** for admin authentication
+- **Better Auth** via `@nuxtjs/better-auth` for authentication
 - **Postgres + pgvector** (local via `docker-compose`) for similarity search
 - **Drizzle ORM** + `drizzle-zod` for typed schema and validation
 - **MiniMax M2.7** (chat) + **NVIDIA `llama-nemotron-embed-vl-1b-v2`** (embeddings)
@@ -24,9 +24,15 @@ bun install
 bun dev                       # http://localhost:3000
 ```
 
-Then sign in at `http://localhost:3000/admin/login` and use the **Ingest**
+Then sign in at `http://localhost:3000/auth` and use the **Ingest**
 action on `/admin` to embed the source content into pgvector. After that, the
 chat at `/` will answer from the vector store.
+
+Auth configuration lives in `server/auth.config.ts` and `app/auth.config.ts`.
+The module generates the auth schema; NuxtHub applies the included migrations.
+Keep the `auth` CLI and `better-auth` dependency versions aligned.
+For existing deployments, replace `NUXT_BETTER_AUTH_URL` with `NUXT_PUBLIC_SITE_URL`
+and retain the current `NUXT_BETTER_AUTH_SECRET` to preserve sessions.
 
 ## Scripts
 
@@ -47,15 +53,16 @@ chat at `/` will answer from the vector store.
 app/        Vue client (components, layouts, pages, composables, utils)
   pages/
     index.vue         Chat UI
-    admin/            Admin login + dashboard
+    auth.vue          Sign in + sign up
+    admin/            Admin dashboard
   components/
     chat/             Comark renderer, indicator, source link
     admin/            Stats panel, confirm-reset modal
 server/     Nitro endpoints, server utils, DB schema, constants
   api/
     chat.post.ts              Streaming chat
-    auth/[...all].ts          Better Auth handler
     admin/                    ingest, stats, reset
+  auth.config.ts              Better Auth server configuration
 shared/     Types shared between client and server
 docker-compose.yml   Local Postgres + pgvector
 ```
@@ -68,7 +75,7 @@ Copy `.env.example` to `.env` and fill in at minimum:
 | --------------------------- | -------------------------------------- |
 | `DATABASE_URL`              | Postgres connection string             |
 | `NUXT_BETTER_AUTH_SECRET`   | Better Auth signing secret             |
-| `NUXT_BETTER_AUTH_URL`      | Public URL the app is served from      |
+| `NUXT_PUBLIC_SITE_URL`      | Public URL the app is served from      |
 | `NUXT_LLM_BASE_URL`         | Chat provider base URL                 |
 | `NUXT_LLM_API_KEY`          | Chat provider API key                  |
 | `NUXT_LLM_MODEL`            | Chat model name                        |

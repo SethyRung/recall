@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import type { DropdownMenuItem, NavigationMenuItem } from "@nuxt/ui";
 
-const { data: session } = await useSession(useFetch);
-
-const user = computed(() => session.value?.user);
-
-const isSignedIn = computed(() => !!user.value && !user.value.isAnonymous);
+const { user, loggedIn: isSignedIn, signOut } = useUserSession();
 
 const navItems = computed<NavigationMenuItem[]>(
   () =>
@@ -45,7 +41,6 @@ const userMenuItems = computed<DropdownMenuItem[]>(() => [
     color: "error",
     onSelect: async () => {
       await signOut();
-      await navigateTo("/");
     },
   },
 ]);

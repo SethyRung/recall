@@ -19,8 +19,6 @@ definePageMeta({ layout: "chat" });
 const route = useRoute();
 const toast = useToast();
 const { model } = useModels();
-const { csrf, headerName } = useCsrf();
-
 const { data: chatEnvelope } = await useFetch<ApiResponse<ChatDetail>>(
   `/api/chats/${route.params.id}`,
   {
@@ -76,7 +74,6 @@ const chat = new Chat({
   messages: chatData.value?.messages as UIMessage[],
   transport: new DefaultChatTransport({
     api: `/api/chats/${chatData.value!.id}`,
-    headers: { [headerName]: csrf },
     body: {
       model: model.value,
     },
@@ -123,7 +120,6 @@ async function saveEdit(message: UIMessage, text: string) {
     unwrap(
       await $fetch<ApiResponse<null>>(`/api/chats/${chatData.value!.id}/messages`, {
         method: "DELETE",
-        headers: { [headerName]: csrf },
         body: { messageId: message.id, type: "edit" },
       }),
     );
@@ -145,7 +141,6 @@ async function regenerateMessage(message: UIMessage) {
     unwrap(
       await $fetch<ApiResponse<null>>(`/api/chats/${chatData.value!.id}/messages`, {
         method: "DELETE",
-        headers: { [headerName]: csrf },
         body: { messageId: message.id, type: "regenerate" },
       }),
     );
@@ -186,7 +181,6 @@ async function vote(message: UIMessage, isUpvoted: boolean) {
         `/api/chats/${chatData.value!.id}/votes`,
         {
           method: "POST",
-          headers: { [headerName]: csrf },
           body:
             next === null ? { messageId: message.id } : { messageId: message.id, isUpvoted: next },
         },
