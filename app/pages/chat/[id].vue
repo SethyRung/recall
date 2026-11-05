@@ -18,7 +18,6 @@ definePageMeta({ layout: "chat" });
 
 const route = useRoute();
 const toast = useToast();
-const { model } = useModels();
 const { data: chatEnvelope } = await useFetch<ApiResponse<ChatDetail>>(
   `/api/chats/${route.params.id}`,
   {
@@ -46,9 +45,6 @@ watch(
   },
 );
 
-const { dropzoneRef, dragging, open, files, uploading, uploadedFiles, removeFile, clearFiles } =
-  useFileUploadWithStatus(route.params.id as string);
-
 const { data: votesEnvelope, refresh: refreshVotes } = await useLazyFetch<ApiResponse<Vote[]>>(
   `/api/chats/${route.params.id}/votes`,
 );
@@ -74,9 +70,14 @@ const chat = new Chat({
   messages: chatData.value?.messages as UIMessage[],
   transport: new DefaultChatTransport({
     api: `/api/chats/${chatData.value!.id}`,
-    body: {
-      model: model.value,
-    },
+    prepareSendMessagesRequest: ({ messages }) => ({
+      body: {
+        messages: messages.map((message) => ({
+          ...message,
+          parts: message.parts.filter((part) => part.type === "text"),
+        })),
+      },
+    }),
   }),
   onError(error) {
     let message = error.message;
@@ -98,13 +99,11 @@ const chat = new Chat({
 
 async function handleSubmit(e: Event) {
   e.preventDefault();
-  if (input.value.trim() && !uploading.value) {
+  if (input.value.trim()) {
     chat.sendMessage({
       text: input.value,
-      files: uploadedFiles.value.length > 0 ? uploadedFiles.value : undefined,
     });
     input.value = "";
-    clearFiles();
   }
 }
 
@@ -219,9 +218,7 @@ onMounted(() => {
     </template>
 
     <template #body>
-      <div ref="dropzoneRef" class="flex flex-1">
-        <DragDropOverlay :show="dragging" />
-
+      <div class="flex flex-1">
         <UContainer class="flex-1 flex flex-col">
           <UChatMessages
             should-auto-scroll
@@ -276,25 +273,15 @@ onMounted(() => {
           <UChatPrompt
             v-model="input"
             :error="chat.error"
-            :disabled="uploading"
             variant="subtle"
             class="sticky bottom-0 [view-transition-name:chat-prompt] rounded-b-none z-10"
             :ui="{ base: 'px-1.5' }"
             @submit="handleSubmit"
           >
-            <template v-if="files.length > 0" #header>
-              <ChatFiles :files="files" @remove="removeFile" />
-            </template>
-
             <template #footer>
-              <div class="flex items-center gap-1">
-                <ChatFileUploadButton :open="open" />
-                <ModelSelect />
-              </div>
-
               <UChatPromptSubmit
                 :status="chat.status"
-                :disabled="uploading"
+                class="ms-auto"
                 color="neutral"
                 size="sm"
                 @stop="chat.stop()"

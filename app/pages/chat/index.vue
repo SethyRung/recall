@@ -9,20 +9,10 @@ const input = ref("");
 const loading = ref(false);
 const chatId = crypto.randomUUID();
 
-const { dropzoneRef, dragging, open, files, uploading, uploadedFiles, removeFile, clearFiles } =
-  useFileUploadWithStatus(chatId);
-
 async function createChat(prompt: string) {
+  if (!prompt.trim() || loading.value) return;
   input.value = prompt;
   loading.value = true;
-
-  const parts: Array<{ type: string; text?: string; mediaType?: string; url?: string }> = [
-    { type: "text", text: prompt },
-  ];
-
-  if (uploadedFiles.value.length > 0) {
-    parts.push(...uploadedFiles.value);
-  }
 
   try {
     const res = await $fetch<ApiResponse<{ id: string }>>("/api/chats", {
@@ -32,7 +22,7 @@ async function createChat(prompt: string) {
         message: {
           id: crypto.randomUUID(),
           role: "user",
-          parts,
+          parts: [{ type: "text", text: prompt }],
         },
       },
     });
@@ -50,7 +40,6 @@ async function createChat(prompt: string) {
 
 async function onSubmit() {
   await createChat(input.value);
-  clearFiles();
 }
 
 const quickChats = [
@@ -80,9 +69,7 @@ const quickChats = [
     </template>
 
     <template #body>
-      <div ref="dropzoneRef" class="flex flex-1">
-        <DragDropOverlay :show="dragging" />
-
+      <div class="flex flex-1">
         <UContainer class="flex-1 flex flex-col justify-center gap-4 sm:gap-6 py-8">
           <h1 class="text-3xl sm:text-4xl text-highlighted font-bold">Ask Recall</h1>
           <p class="text-muted -mt-3">
@@ -92,23 +79,13 @@ const quickChats = [
           <UChatPrompt
             v-model="input"
             :status="loading ? 'submitted' : 'ready'"
-            :disabled="uploading"
             class="[view-transition-name:chat-prompt]"
             variant="subtle"
             :ui="{ base: 'px-1.5' }"
             @submit="onSubmit"
           >
-            <template v-if="files.length > 0" #header>
-              <ChatFiles :files="files" @remove="removeFile" />
-            </template>
-
             <template #footer>
-              <div class="flex items-center gap-1">
-                <ChatFileUploadButton :open="open" />
-                <ModelSelect />
-              </div>
-
-              <UChatPromptSubmit color="neutral" size="sm" :disabled="uploading" />
+              <UChatPromptSubmit color="neutral" size="sm" class="ms-auto" />
             </template>
           </UChatPrompt>
 
