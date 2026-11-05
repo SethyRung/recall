@@ -16,6 +16,8 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    resendApiKey: "",
+    resendFromEmail: "",
     llmBaseUrl: "",
     llmApiKey: "",
     llmModel: "",

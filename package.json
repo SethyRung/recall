@@ -21,6 +21,7 @@
     "@ai-sdk/anthropic": "^4.0.97",
     "@ai-sdk/openai": "^4.0.109",
     "@ai-sdk/vue": "^4.0.163",
+    "@comark/html": "^0.8.1",
     "@comark/nuxt": "^0.8.1",
     "@electric-sql/pglite": "^0.5.15",
     "@neondatabase/serverless": "^1.2.0",

@@ -75,13 +75,7 @@ async function signInWith(provider: "google" | "github") {}
             label="Forgot your password?"
             variant="link"
             class="underline p-0"
-            @click="
-              toast.add({
-                title: 'Contact admin to reset.',
-                color: 'neutral',
-                icon: 'i-lucide-info',
-              })
-            "
+            to="/forgot-password"
           />
         </template>
 

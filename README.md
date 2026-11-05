@@ -34,6 +34,10 @@ Keep the `auth` CLI and `better-auth` dependency versions aligned.
 For existing deployments, replace `NUXT_BETTER_AUTH_URL` with `NUXT_PUBLIC_SITE_URL`
 and retain the current `NUXT_BETTER_AUTH_SECRET` to preserve sessions.
 
+Password recovery starts at `/forgot-password`. Configure `NUXT_RESEND_API_KEY` and
+`NUXT_RESEND_FROM_EMAIL` with a sender on your verified Resend domain. Reset links
+expire after one hour and work once; resetting a password revokes existing sessions.
+
 ## Scripts
 
 | Command         | What it does             |
@@ -71,18 +75,20 @@ docker-compose.yml   Local Postgres + pgvector
 
 Copy `.env.example` to `.env` and fill in at minimum:
 
-| Variable                    | Purpose                                |
-| --------------------------- | -------------------------------------- |
-| `DATABASE_URL`              | Postgres connection string             |
-| `NUXT_BETTER_AUTH_SECRET`   | Better Auth signing secret             |
-| `NUXT_PUBLIC_SITE_URL`      | Public URL the app is served from      |
-| `NUXT_LLM_BASE_URL`         | Chat provider base URL                 |
-| `NUXT_LLM_API_KEY`          | Chat provider API key                  |
-| `NUXT_LLM_MODEL`            | Chat model name                        |
-| `NUXT_EMBED_BASE_URL`       | Embeddings provider base URL           |
-| `NUXT_EMBED_API_KEY`        | Embeddings provider API key            |
-| `NUXT_EMBED_MODEL`          | Embeddings model name                  |
-| `NUXT_TOP_K`                | Chunks retrieved per query (default 5) |
-| `NUXT_SIMILARITY_THRESHOLD` | Minimum similarity to include a chunk  |
-| `NUXT_CHUNK_SIZE`           | Chunk size in tokens                   |
-| `NUXT_CHUNK_OVERLAP`        | Overlap between chunks                 |
+| Variable                    | Purpose                                            |
+| --------------------------- | -------------------------------------------------- |
+| `DATABASE_URL`              | Postgres connection string                         |
+| `NUXT_BETTER_AUTH_SECRET`   | Better Auth signing secret                         |
+| `NUXT_PUBLIC_SITE_URL`      | Public URL the app is served from                  |
+| `NUXT_RESEND_API_KEY`       | Resend API key for password reset emails           |
+| `NUXT_RESEND_FROM_EMAIL`    | Verified sender, e.g. Recall <noreply@example.com> |
+| `NUXT_LLM_BASE_URL`         | Chat provider base URL                             |
+| `NUXT_LLM_API_KEY`          | Chat provider API key                              |
+| `NUXT_LLM_MODEL`            | Chat model name                                    |
+| `NUXT_EMBED_BASE_URL`       | Embeddings provider base URL                       |
+| `NUXT_EMBED_API_KEY`        | Embeddings provider API key                        |
+| `NUXT_EMBED_MODEL`          | Embeddings model name                              |
+| `NUXT_TOP_K`                | Chunks retrieved per query (default 5)             |
+| `NUXT_SIMILARITY_THRESHOLD` | Minimum similarity to include a chunk              |
+| `NUXT_CHUNK_SIZE`           | Chunk size in tokens                               |
+| `NUXT_CHUNK_OVERLAP`        | Overlap between chunks                             |

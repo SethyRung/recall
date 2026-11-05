@@ -8,6 +8,7 @@
         "@ai-sdk/anthropic": "^4.0.97",
         "@ai-sdk/openai": "^4.0.109",
         "@ai-sdk/vue": "^4.0.163",
+        "@comark/html": "^0.8.1",
         "@comark/nuxt": "^0.8.1",
         "@electric-sql/pglite": "^0.5.15",
         "@neondatabase/serverless": "^1.2.0",
@@ -168,6 +169,8 @@
     "@cloudflare/workers-types": ["@cloudflare/workers-types@4.20260702.1", "", {}, "sha512-mOhf5TUEB1m2vPrxtqoIGfz0fUC9xyxRDx5gWHy5s+OCo6dcV+g7wI1R7gYCMFohhqF/2y2xeKVwMwCJjfn/WA=="],
 
     "@colordx/core": ["@colordx/core@7.3.0", "", {}, "sha512-LVzTTPhX7wpy7TkGjouA9zbbCBIw92RGm7ZQqSKFE0oYE3sMx2FGXz90eVpgw7k/+wrrY+qJ86nHXifZWMS5jA=="],
+
+    "@comark/html": ["@comark/html@0.8.1", "", { "dependencies": { "comark": "0.8.1" }, "peerDependencies": { "beautiful-mermaid": ">=1.1.3", "katex": ">=0.18.7", "shiki": "^4.4.3" }, "optionalPeers": ["beautiful-mermaid", "katex", "shiki"] }, "sha512-0lgJEnx+lnWmQszLkkGosG/AoJMZmWTRG/kUTwpCBxVxin3yIbjLf+2TA1aR/4XNvnyjMjcaFPR8iKh4OHh4AQ=="],
 
     "@comark/nuxt": ["@comark/nuxt@0.8.1", "", { "dependencies": { "@comark/vue": "^0.8.1", "@nuxt/kit": "4.6.1", "comark": "0.8.1" }, "peerDependencies": { "nuxt": "^4.0.0" } }, "sha512-Kc3SVGjKYfNN4h4dm9SNnQKnMl+bp/PvrZ11WU7qCl8ohdxyl5gjEbjhLT223TzSmbHvCtmxzlK/hXsUHXGA2Q=="],
 
