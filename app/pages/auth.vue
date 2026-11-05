@@ -3,13 +3,17 @@ import type { TabsItem } from "@nuxt/ui";
 
 definePageMeta({ layout: "empty" });
 
+const activeTab = ref("sign_in");
+
 const items: TabsItem[] = [
   {
     label: "Sign in",
+    value: "sign_in",
     slot: "sign_in" as const,
   },
   {
     label: "Sign up",
+    value: "sign_up",
     slot: "sign_up" as const,
   },
 ];
@@ -42,6 +46,7 @@ const items: TabsItem[] = [
         }"
       >
         <UTabs
+          v-model="activeTab"
           :items="items"
           :unmount-on-hide="false"
           color="neutral"
@@ -56,7 +61,7 @@ const items: TabsItem[] = [
           </template>
 
           <template #sign_up>
-            <AuthSignupForm />
+            <AuthSignupForm @success="activeTab = 'sign_in'" />
           </template>
         </UTabs>
       </UTheme>

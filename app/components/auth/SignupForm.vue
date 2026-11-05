@@ -2,7 +2,7 @@
 import { z } from "zod";
 import type { FormSubmitEvent } from "@nuxt/ui";
 
-const { redirect } = useAuthRedirect();
+const emit = defineEmits<{ success: [] }>();
 const signUp = useSignUp("email");
 const toast = useToast();
 
@@ -27,8 +27,6 @@ const state = reactive<SignUpInput>({
   name: "",
 });
 
-const showPassword = ref(false);
-const showConfirmPassword = ref(false);
 const loading = ref(false);
 
 async function onSubmit(event: FormSubmitEvent<SignUpInput>) {
@@ -37,11 +35,14 @@ async function onSubmit(event: FormSubmitEvent<SignUpInput>) {
 
     const { data } = event;
 
-    await signUp.execute({
-      email: data.email,
-      password: data.password,
-      name: data.name,
-    });
+    await signUp.execute(
+      {
+        email: data.email,
+        password: data.password,
+        name: data.name,
+      },
+      { onSuccess: () => emit("success") },
+    );
     if (signUp.error.value) {
       toast.add({
         title: "Sign up failed",
@@ -54,12 +55,10 @@ async function onSubmit(event: FormSubmitEvent<SignUpInput>) {
 
     toast.add({
       title: `Welcome, ${data.name}!`,
-      description: "Your account is ready.",
+      description: "Sign in to continue.",
       color: "success",
       icon: "i-lucide-check",
     });
-
-    await navigateTo(redirect.value || "/");
   } catch (e) {
     toast.add({
       title: "Sign up failed",
@@ -97,41 +96,19 @@ async function onSubmit(event: FormSubmitEvent<SignUpInput>) {
       <UFormField label="Password" name="password">
         <UInput
           v-model="state.password"
-          :type="showPassword ? 'text' : 'password'"
+          type="password"
           autocomplete="new-password"
           placeholder="********"
-        >
-          <template #trailing>
-            <button
-              type="button"
-              :aria-label="showPassword ? 'Hide password' : 'Show password'"
-              class="text-neutral-500 hover:text-neutral-300"
-              @click="showPassword = !showPassword"
-            >
-              <UIcon :name="showPassword ? 'i-lucide-eye-off' : 'i-lucide-eye'" />
-            </button>
-          </template>
-        </UInput>
+        />
       </UFormField>
 
       <UFormField label="Confirm Password" name="confirmPassword">
         <UInput
           v-model="state.confirmPassword"
-          :type="showConfirmPassword ? 'text' : 'password'"
+          type="password"
           autocomplete="new-password"
           placeholder="********"
-        >
-          <template #trailing>
-            <button
-              type="button"
-              :aria-label="showConfirmPassword ? 'Hide password' : 'Show password'"
-              class="text-neutral-500 hover:text-neutral-300"
-              @click="showConfirmPassword = !showConfirmPassword"
-            >
-              <UIcon :name="showConfirmPassword ? 'i-lucide-eye-off' : 'i-lucide-eye'" />
-            </button>
-          </template>
-        </UInput>
+        />
       </UFormField>
 
       <UButton type="submit" label="Sign up" block :loading="loading" />
