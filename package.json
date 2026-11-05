@@ -12,6 +12,7 @@
     "db:migrate": "nuxt-hub db migrate",
     "db:drop": "nuxt-hub db drop",
     "test": "vitest run",
+    "test:integration": "bun test/e2e/rag.ts",
     "test:watch": "vitest",
     "typecheck": "nuxt typecheck",
     "lint": "oxlint",
