@@ -1,7 +1,6 @@
 import { defineClientAuth } from "@nuxtjs/better-auth/config";
-import { inferAdditionalFields } from "better-auth/client/plugins";
-import type serverAuthConfig from "../server/auth.config";
+import { adminClient } from "better-auth/client/plugins";
 
 export default defineClientAuth({
-  plugins: [inferAdditionalFields<ReturnType<typeof serverAuthConfig>>()],
+  plugins: [adminClient()],
 });

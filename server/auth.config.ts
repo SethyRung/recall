@@ -1,20 +1,21 @@
 import { defineServerAuth } from "@nuxtjs/better-auth/config";
+import { admin } from "better-auth/plugins";
 
 export default defineServerAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: false,
+    customSyntheticUser: ({ coreFields, additionalFields, id }) => ({
+      ...coreFields,
+      role: "user",
+      banned: false,
+      banReason: null,
+      banExpires: null,
+      ...additionalFields,
+      id,
+    }),
   },
-  user: {
-    additionalFields: {
-      role: {
-        type: "string",
-        required: true,
-        defaultValue: "user",
-        input: false,
-      },
-    },
-  },
+  plugins: [admin()],
   session: {
     cookieCache: {
       enabled: true,
