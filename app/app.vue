@@ -1,4 +1,7 @@
 <script setup lang="ts">
+const { user } = useUserSession();
+const sessionOwner = computed(() => user.value?.id ?? "visitor");
+
 useHead({
   meta: [
     { charset: "utf-8" },
@@ -14,7 +17,7 @@ useHead({
 <template>
   <UApp :toaster="{ position: 'top-right' }" class="font-sans">
     <NuxtLayout>
-      <NuxtPage />
+      <NuxtPage :key="sessionOwner" />
     </NuxtLayout>
   </UApp>
 </template>
