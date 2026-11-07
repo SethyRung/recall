@@ -14,7 +14,7 @@ type ChatDetail = {
 };
 type Vote = { chatId: string; messageId: string; isUpvoted: boolean };
 
-definePageMeta({ layout: "chat" });
+definePageMeta({ keepalive: { max: 20 } });
 
 const route = useRoute();
 const toast = useToast();
@@ -36,15 +36,6 @@ if (!chatData.value) {
 
 useHead({ title: () => `${chatData.value?.title || "Chat"} · Recall` });
 
-const title = ref<string | null>(chatData.value?.title ?? null);
-
-watch(
-  () => chatData.value?.title,
-  (next) => {
-    title.value = next ?? null;
-  },
-);
-
 const { data: votesEnvelope, refresh: refreshVotes } = await useLazyFetch<ApiResponse<Vote[]>>(
   `/api/chats/${route.params.id}/votes`,
 );
@@ -63,7 +54,8 @@ watch(
   { deep: true },
 );
 
-const input = ref("");
+const { tabs: openTabs, useDraft } = useChatTabs();
+const input = useDraft(chatData.value!.id);
 
 const chat = new Chat({
   id: chatData.value?.id,
@@ -80,7 +72,8 @@ const chat = new Chat({
     }),
   }),
   async onFinish() {
-    if (!title.value) {
+    if (!openTabs.value.some((tab) => tab.chatId === chat.id)) return;
+    if (!chatData.value?.title) {
       await refreshNuxtData(`chat-${route.params.id}`);
       await refreshNuxtData("chats");
     }
@@ -101,6 +94,22 @@ const chat = new Chat({
       duration: 0,
     });
   },
+});
+
+watch(
+  () => openTabs.value.some((tab) => tab.chatId === chat.id),
+  (open) => {
+    if (!open) chat.stop();
+  },
+);
+onUnmounted(() => chat.stop());
+const active = ref(true);
+onActivated(() => {
+  active.value = true;
+  if (!chatData.value) showError({ statusCode: 404, statusMessage: "Chat not found" });
+});
+onDeactivated(() => {
+  active.value = false;
 });
 
 async function handleSubmit(e: Event) {
@@ -209,94 +218,81 @@ onMounted(() => {
 </script>
 
 <template>
-  <UDashboardPanel
-    v-if="chatData?.id"
-    id="chat"
-    class="relative min-h-0"
-    :ui="{ body: 'p-0 sm:p-0 overscroll-none' }"
-  >
-    <template #header>
-      <Navbar>
-        <template #title>
-          <ChatTitle :chat-id="chatData!.id" :title="title" @update:title="title = $event" />
-        </template>
-      </Navbar>
-    </template>
+  <section v-if="chatData?.id" class="flex min-h-0 flex-1 flex-col">
+    <div class="mx-auto flex min-h-0 w-full max-w-215 flex-1 flex-col px-5 pt-5 md:px-10 md:pt-6">
+      <div class="relative min-h-0 flex-1 overflow-y-auto">
+        <UChatMessages
+          :should-auto-scroll="active"
+          :messages="chat.messages"
+          :status="chat.status"
+          :user="{ side: 'left', variant: 'naked' }"
+          :assistant="{ side: 'left', variant: 'naked' }"
+          :ui="{ root: 'px-0' }"
+        >
+          <template #header="{ message }">
+            <div
+              class="mb-2 flex items-center gap-2.5 text-xs"
+              :class="message.role === 'user' ? 'text-muted' : 'text-primary'"
+            >
+              <span>{{ message.role === "user" ? "❯" : "[r_]" }}</span>
+              <span>{{ message.role === "user" ? "you" : "recall" }}</span>
+            </div>
+          </template>
 
-    <template #body>
-      <div class="flex flex-1">
-        <UContainer class="flex-1 flex flex-col">
-          <UChatMessages
-            should-auto-scroll
-            :messages="chat.messages"
-            :status="chat.status"
-            :spacing-offset="160"
-            class="pt-(--ui-header-height)"
-          >
-            <template #indicator>
-              <div class="flex items-center gap-1.5">
-                <ChatIndicator />
-                <UChatShimmer text="Thinking..." class="text-sm" />
-              </div>
-            </template>
+          <template #indicator>
+            <div class="flex items-center gap-2 text-primary">
+              <ChatIndicator />
+              <span class="text-xs">searching, thinking, connecting...</span>
+            </div>
+          </template>
 
-            <template #files="{ message, parts }">
-              <ChatFilePreview
-                v-for="(part, index) in parts"
-                :key="`${message.id}-${index}`"
-                :name="getFileName(part.url)"
-                :type="part.mediaType"
-                :preview-url="part.url"
-                size="3xl"
-              />
-            </template>
+          <template #files="{ message, parts }">
+            <ChatFilePreview
+              v-for="(part, index) in parts"
+              :key="`${message.id}-${index}`"
+              :name="getFileName(part.url)"
+              :type="part.mediaType"
+              :preview-url="part.url"
+              size="3xl"
+            />
+          </template>
 
-            <template #content="{ message }">
-              <ChatMessageContent
-                :message="message"
-                :editing="editingMessageId === message.id"
-                @save="saveEdit"
-                @cancel-edit="editingMessageId = null"
-              />
-            </template>
+          <template #content="{ message }">
+            <ChatMessageContent
+              :message="message"
+              :editing="editingMessageId === message.id"
+              @save="saveEdit"
+              @cancel-edit="editingMessageId = null"
+            />
+          </template>
 
-            <template #actions="{ message }">
-              <ChatMessageActions
-                :message="message"
-                :streaming="
-                  chat.status === 'streaming' &&
-                  message.id === chat.messages[chat.messages.length - 1]?.id
-                "
-                :editing="editingMessageId === message.id"
-                :vote="getVote(message.id)"
-                @vote="(_message, isUpvoted) => vote(_message, isUpvoted)"
-                @edit="startEdit"
-                @regenerate="regenerateMessage"
-              />
-            </template>
-          </UChatMessages>
-
-          <UChatPrompt
-            v-model="input"
-            :error="chat.error"
-            variant="subtle"
-            class="sticky bottom-0 [view-transition-name:chat-prompt] rounded-b-none z-10"
-            :ui="{ base: 'px-1.5' }"
-            @submit="handleSubmit"
-          >
-            <template #footer>
-              <UChatPromptSubmit
-                :status="chat.status"
-                class="ms-auto"
-                color="neutral"
-                size="sm"
-                @stop="chat.stop()"
-                @reload="chat.regenerate()"
-              />
-            </template>
-          </UChatPrompt>
-        </UContainer>
+          <template #actions="{ message }">
+            <ChatMessageActions
+              :message="message"
+              :streaming="
+                chat.status === 'streaming' &&
+                message.id === chat.messages[chat.messages.length - 1]?.id
+              "
+              :editing="editingMessageId === message.id"
+              :vote="getVote(message.id)"
+              @vote="(_message, isUpvoted) => vote(_message, isUpvoted)"
+              @edit="startEdit"
+              @regenerate="regenerateMessage"
+            />
+          </template>
+        </UChatMessages>
       </div>
-    </template>
-  </UDashboardPanel>
+
+      <div class="z-5 shrink-0 bg-default pt-4 pb-3.5 md:pb-5.5">
+        <ChatPrompt
+          v-model="input"
+          :status="chat.status"
+          :error="chat.error"
+          @submit="handleSubmit"
+          @stop="chat.stop()"
+          @reload="chat.regenerate()"
+        />
+      </div>
+    </div>
+  </section>
 </template>

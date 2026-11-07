@@ -14,6 +14,7 @@ interface ChatDetail {
 export function useChatActions() {
   const route = useRoute();
   const toast = useToast();
+  const { closeTab } = useChatTabs();
   const overlay = useOverlay();
   const renameModal = overlay.create(LazyModalRename);
   const deleteModal = overlay.create(LazyModalConfirm, {
@@ -95,9 +96,11 @@ export function useChatActions() {
         };
       }
 
-      if (route.params.id === id) {
-        navigateTo("/chat");
+      const closed = await closeTab(id);
+      if (!closed && route.params.id === id) {
+        await navigateTo("/chat");
       }
+      clearNuxtData(`chat-${id}`);
 
       return true;
     } catch {

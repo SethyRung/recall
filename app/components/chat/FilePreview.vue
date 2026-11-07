@@ -84,7 +84,6 @@ onUnmounted(() => {
       size="xs"
       color="neutral"
       class="absolute p-0 -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity rounded-full ring ring-bg"
-      aria-label="Remove file"
       @click="emit('remove')"
     />
 
@@ -103,13 +102,13 @@ onUnmounted(() => {
             :animate="{ opacity: 1, scale: 1 }"
             :exit="{ opacity: 0, scale: 0.9 }"
             :transition="{ type: 'spring', bounce: 0.15, duration: 0.5, ease: 'easeInOut' }"
-            class="absolute inset-0 flex items-center justify-center cursor-zoom-out"
+            class="absolute inset-0 flex items-center justify-center p-4 cursor-zoom-out"
             @click="closeZoom"
           >
             <img
               :src="previewUrl"
               :alt="removeRandomSuffix(name)"
-              class="max-w-[95vw] max-h-[95vh] object-contain rounded-md"
+              class="max-w-full max-h-full object-contain rounded-md"
             />
           </Motion>
         </div>
