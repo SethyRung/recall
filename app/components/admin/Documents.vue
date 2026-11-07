@@ -178,9 +178,9 @@ async function onDelete() {
       </template>
 
       <template #contentLength-cell="{ row }">
-        <span class="font-mono text-sm text-muted">{{
-          formatCompact(row.original.contentLength)
-        }}</span>
+        <span class="font-mono text-sm text-muted">
+          {{ formatCompact(row.original.contentLength) }}
+        </span>
       </template>
 
       <template #updatedAt-cell="{ row }">
@@ -262,7 +262,8 @@ async function onDelete() {
             <template #source>
               <pre
                 class="overflow-x-auto whitespace-pre-wrap font-mono text-xs leading-relaxed text-muted"
-                >{{ detail.content }}</pre>
+                v-text="detail.content"
+              />
             </template>
             <template #chunks>
               <div v-if="detail.chunks.length === 0" class="py-8 text-center text-sm text-muted">
@@ -274,7 +275,7 @@ async function onDelete() {
                   :key="chunk.id"
                   class="border border-accented p-3"
                 >
-                  <p class="mb-2 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+                  <p class="mb-2 font-mono text-xs uppercase tracking-widest text-muted">
                     Chunk {{ chunk.index + 1 }} · {{ formatCompact(chunk.content.length) }} chars
                   </p>
                   <p class="whitespace-pre-wrap text-sm text-default">{{ chunk.content }}</p>
@@ -313,9 +314,9 @@ async function onDelete() {
       <template #body>
         <p class="text-sm text-muted">
           Delete
-          <span class="font-medium text-highlighted">{{
-            pendingDelete ? titleOf(pendingDelete) : ""
-          }}</span>
+          <span class="font-medium text-highlighted">
+            {{ pendingDelete ? titleOf(pendingDelete) : "" }}
+          </span>
           and its chunks. The chat bot will no longer retrieve this source.
         </p>
       </template>

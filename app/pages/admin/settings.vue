@@ -190,318 +190,308 @@ onBeforeRouteLeave(() => !dirty.value || window.confirm("Leave with unsaved sett
 </script>
 
 <template>
-  <UDashboardPanel id="settings" :ui="{ body: 'p-0' }">
-    <template #header>
-      <UDashboardNavbar title="Settings">
-        <template #leading><UDashboardSidebarCollapse /></template>
-        <template #right>
-          <UColorModeButton />
-          <UButton
-            label="Reload settings"
-            icon="i-lucide-refresh-cw"
-            color="neutral"
-            variant="outline"
+  <AdminWorkspace
+    id="settings"
+    title="Settings"
+    description="Fine-tune the way Recall thinks. Models, retrieval, and the details behind every conversation."
+  >
+    <template #actions>
+      <UButton
+        label="Reload settings"
+        icon="i-lucide-refresh-cw"
+        color="neutral"
+        variant="outline"
+        size="sm"
+        :disabled="saving"
+        @click="reload"
+      />
+    </template>
+    <template #status>
+      <UBadge
+        :label="dirty ? 'Unsaved changes' : `Saved revision ${version}`"
+        :color="dirty ? 'warning' : 'neutral'"
+        variant="subtle"
+        size="sm"
+      />
+    </template>
+    <template #toolbar>
+      <UButton
+        type="submit"
+        form="admin-settings"
+        label="Save settings"
+        icon="i-lucide-save"
+        size="sm"
+        :loading="saving"
+        :disabled="!data?.encryptionReady || !dirty || !!loadError"
+      />
+    </template>
+    <UAlert v-if="alert" :color="alert.color" :title="alert.title" variant="subtle">
+      <template #description>
+        <ul class="space-y-1">
+          <li v-for="item in alert.alerts" :key="item.title">
+            <template v-if="alert.alerts.length > 1">
+              <span class="font-medium">{{ item.title }}:</span>
+              {{ item.description }}
+            </template>
+            <template v-else>{{ item.description }}</template>
+          </li>
+        </ul>
+      </template>
+    </UAlert>
+
+    <UForm
+      v-if="data && !loadError"
+      id="admin-settings"
+      :schema="appSettingsSchema"
+      :state="state"
+      :disabled="saving"
+      @submit="save"
+      @error="onFormError"
+    >
+      <USelect v-model="section" :items="SETTINGS_SECTIONS" class="mb-4 w-full sm:hidden" />
+      <UTabs
+        v-model="section"
+        :items="SETTINGS_SECTIONS"
+        variant="link"
+        :unmount-on-hide="false"
+        :ui="{
+          root: 'gap-0',
+          list: 'hidden sm:flex rounded-none border-b border-accented p-0',
+          trigger: 'px-4 py-3 text-xs font-normal',
+          content: 'space-y-5 pt-5',
+        }"
+      >
+        <template #models>
+          <AdminModelSettings
+            v-model="state.models"
+            v-model:cleared="cleared"
+            :secret-state="secretState"
             :disabled="saving"
-            @click="reload"
           />
-        </template>
-      </UDashboardNavbar>
-
-      <UDashboardToolbar>
-        <template #left>
-          <UBadge
-            :label="dirty ? 'Unsaved changes' : `Saved revision ${version}`"
-            :color="dirty ? 'warning' : 'neutral'"
-            variant="subtle"
-          />
-        </template>
-        <template #right>
-          <UButton
-            type="submit"
-            form="admin-settings"
-            label="Save settings"
-            icon="i-lucide-save"
-            :loading="saving"
-            :disabled="!data?.encryptionReady || !dirty || !!loadError"
-          />
-        </template>
-      </UDashboardToolbar>
-    </template>
-
-    <template #body>
-      <UContainer class="w-full max-w-6xl py-6 space-y-6">
-        <UAlert v-if="alert" :color="alert.color" :title="alert.title" variant="subtle">
-          <template #description>
-            <ul class="space-y-1">
-              <li v-for="item in alert.alerts" :key="item.title">
-                <template v-if="alert.alerts.length > 1">
-                  <span class="font-medium">{{ item.title }}:</span>
-                  {{ item.description }}
-                </template>
-                <template v-else>{{ item.description }}</template>
-              </li>
-            </ul>
-          </template>
-        </UAlert>
-
-        <UForm
-          v-if="data && !loadError"
-          id="admin-settings"
-          :schema="appSettingsSchema"
-          :state="state"
-          :disabled="saving"
-          @submit="save"
-          @error="onFormError"
-        >
-          <USelect
-            v-model="section"
-            :items="SETTINGS_SECTIONS"
-            aria-label="Settings section"
-            class="mb-4 w-full sm:hidden"
-          />
-          <UTabs
-            v-model="section"
-            :items="SETTINGS_SECTIONS"
-            variant="link"
-            :unmount-on-hide="false"
-            :ui="{
-              list: 'hidden sm:flex',
-              content: 'space-y-4',
-            }"
+          <AdminPanel
+            title="Routing"
+            description="One attempt per eligible model; transient errors trigger fallback before answer text starts."
           >
-            <template #models>
-              <AdminModelSettings
-                v-model="state.models"
-                v-model:cleared="cleared"
-                :secret-state="secretState"
-                :disabled="saving"
-              />
-              <AdminPanel
-                title="Routing"
-                description="One attempt per eligible model; transient errors trigger fallback before answer text starts."
+            <div class="grid gap-4 sm:grid-cols-2">
+              <UFormField
+                v-for="field in routingFields"
+                :key="field.key"
+                :name="`routing.${field.key}`"
+                :label="field.label"
               >
-                <div class="grid gap-4 sm:grid-cols-2">
-                  <UFormField
-                    v-for="field in routingFields"
-                    :key="field.key"
-                    :name="`routing.${field.key}`"
-                    :label="field.label"
-                  >
-                    <UInputNumber
-                      :id="`settings-routing-${field.key}`"
-                      v-model="state.routing[field.key]"
-                      :min="field.min"
-                      :max="field.max"
-                      class="w-full"
-                    />
-                  </UFormField>
-                </div>
-              </AdminPanel>
-            </template>
+                <UInputNumber
+                  :id="`settings-routing-${field.key}`"
+                  v-model="state.routing[field.key]"
+                  :min="field.min"
+                  :max="field.max"
+                  class="w-full"
+                />
+              </UFormField>
+            </div>
+          </AdminPanel>
+        </template>
 
-            <template #knowledge>
-              <AdminPanel
-                title="Embedding provider"
-                description="OpenAI-compatible, 2048 dimensions. Export and reset the knowledge base before changing model or endpoint, then re-ingest. Credential rotation does not require reset."
+        <template #knowledge>
+          <AdminPanel
+            title="Embedding provider"
+            description="OpenAI-compatible, 2048 dimensions. Export and reset the knowledge base before changing model or endpoint, then re-ingest. Credential rotation does not require reset."
+          >
+            <div class="grid gap-4 sm:grid-cols-2">
+              <UFormField name="embed.model" label="Model ID">
+                <UInput
+                  id="settings-embed-model"
+                  v-model="state.embed.model"
+                  placeholder="Provider model ID"
+                  class="w-full"
+                />
+              </UFormField>
+              <UFormField
+                name="embed.baseUrl"
+                label="API prefix"
+                help="Optional. Leave blank to use the provider’s default endpoint."
               >
-                <div class="grid gap-4 sm:grid-cols-2">
-                  <UFormField name="embed.model" label="Model ID">
-                    <UInput
-                      id="settings-embed-model"
-                      v-model="state.embed.model"
-                      placeholder="Provider model ID"
-                      class="w-full"
-                    />
-                  </UFormField>
-                  <UFormField
-                    name="embed.baseUrl"
-                    label="API prefix"
-                    help="Optional. Leave blank to use the provider’s default endpoint."
-                  >
-                    <UInput
-                      id="settings-embed-baseUrl"
-                      v-model="state.embed.baseUrl"
-                      placeholder="https://openrouter.ai/api/v1"
-                      class="w-full"
-                    />
-                  </UFormField>
-                  <UFormField name="embed.credentialType" label="Credential type">
-                    <USelect
-                      id="settings-embed-credentialType"
-                      :model-value="embedCredentialType()"
-                      :items="embedCredentialTypes"
-                      class="w-full"
-                      @update:model-value="selectEmbedCredentialType($event)"
-                    />
-                  </UFormField>
-                  <div :key="embedCredentialType()">
-                    <UFormField
-                      :name="embedCredentialPath()"
-                      :label="embedCredentialLabel()"
-                      :help="
-                        secretState[embedCredentialPath()]
-                          ? 'Saved securely. Leave blank to keep; enter a value to rotate.'
-                          : 'No saved credential.'
-                      "
-                    >
-                      <UInput
-                        :id="`settings-embed-${embedCredentialType()}`"
-                        v-model="state.embed[embedCredentialType()]"
-                        type="password"
-                        autocomplete="new-password"
-                        :disabled="cleared[embedCredentialPath()]"
-                        placeholder="New credential"
-                        class="w-full"
-                      />
-                    </UFormField>
-                    <UCheckbox
-                      v-if="secretState[embedCredentialPath()]"
-                      :id="`settings-embed-${embedCredentialType()}-remove`"
-                      :model-value="cleared[embedCredentialPath()] === true"
-                      :label="`Remove saved ${embedCredentialLabel().toLowerCase()}`"
-                      class="mt-2"
-                      @update:model-value="setEmbedCleared"
-                    />
-                  </div>
-                </div>
-                <p class="mt-4 text-xs text-dimmed">
-                  Only the selected credential is saved; the other is removed on Save. Embeddings
-                  use Bearer authentication.
-                </p>
-              </AdminPanel>
-              <AdminPanel
-                title="Retrieval"
-                description="Changes apply to the next search. Reranking uses lexical relevance, not a separate provider."
+                <UInput
+                  id="settings-embed-baseUrl"
+                  v-model="state.embed.baseUrl"
+                  placeholder="https://openrouter.ai/api/v1"
+                  class="w-full"
+                />
+              </UFormField>
+              <UFormField name="embed.credentialType" label="Credential type">
+                <USelect
+                  id="settings-embed-credentialType"
+                  :model-value="embedCredentialType()"
+                  :items="embedCredentialTypes"
+                  class="w-full"
+                  @update:model-value="selectEmbedCredentialType($event)"
+                />
+              </UFormField>
+              <div :key="embedCredentialType()">
+                <UFormField
+                  :name="embedCredentialPath()"
+                  :label="embedCredentialLabel()"
+                  :help="
+                    secretState[embedCredentialPath()]
+                      ? 'Saved securely. Leave blank to keep; enter a value to rotate.'
+                      : 'No saved credential.'
+                  "
+                >
+                  <UInput
+                    :id="`settings-embed-${embedCredentialType()}`"
+                    v-model="state.embed[embedCredentialType()]"
+                    type="password"
+                    autocomplete="new-password"
+                    :disabled="cleared[embedCredentialPath()]"
+                    placeholder="New credential"
+                    class="w-full"
+                  />
+                </UFormField>
+                <UCheckbox
+                  v-if="secretState[embedCredentialPath()]"
+                  :id="`settings-embed-${embedCredentialType()}-remove`"
+                  :model-value="cleared[embedCredentialPath()] === true"
+                  :label="`Remove saved ${embedCredentialLabel().toLowerCase()}`"
+                  class="mt-2"
+                  @update:model-value="setEmbedCleared"
+                />
+              </div>
+            </div>
+            <p class="mt-4 text-xs text-dimmed">
+              Only the selected credential is saved; the other is removed on Save. Embeddings use
+              Bearer authentication.
+            </p>
+          </AdminPanel>
+          <AdminPanel
+            title="Retrieval"
+            description="Changes apply to the next search. Reranking uses lexical relevance, not a separate provider."
+          >
+            <div class="grid gap-4 sm:grid-cols-2">
+              <UFormField name="retrieval.topK" label="Top K">
+                <UInputNumber
+                  id="settings-retrieval-topK"
+                  v-model="state.retrieval.topK"
+                  :min="1"
+                  :max="50"
+                  class="w-full"
+                />
+              </UFormField>
+              <UFormField name="retrieval.similarityThreshold" label="Similarity threshold">
+                <UInputNumber
+                  id="settings-retrieval-similarityThreshold"
+                  v-model="state.retrieval.similarityThreshold"
+                  :min="0"
+                  :max="1"
+                  :step="0.01"
+                  class="w-full"
+                />
+              </UFormField>
+              <UFormField name="retrieval.hybrid" label="Hybrid search">
+                <USwitch
+                  id="settings-retrieval-hybrid"
+                  v-model="state.retrieval.hybrid"
+                  label="Combine vector and keyword search"
+                />
+              </UFormField>
+              <UFormField name="retrieval.rerank" label="Reranking">
+                <USwitch
+                  id="settings-retrieval-rerank"
+                  v-model="state.retrieval.rerank"
+                  label="Rerank retrieved hits"
+                />
+              </UFormField>
+            </div>
+          </AdminPanel>
+          <AdminPanel
+            title="Chunking"
+            description="Applies to future ingestion. Re-ingest existing sources to apply new chunking settings; unchanged content will be reprocessed when chunking changes."
+          >
+            <div class="grid gap-4 sm:grid-cols-2">
+              <UFormField
+                v-for="field in chunkingFields"
+                :key="field.key"
+                :name="`chunking.${field.key}`"
+                :label="field.label"
               >
-                <div class="grid gap-4 sm:grid-cols-2">
-                  <UFormField name="retrieval.topK" label="Top K">
-                    <UInputNumber
-                      id="settings-retrieval-topK"
-                      v-model="state.retrieval.topK"
-                      :min="1"
-                      :max="50"
-                      class="w-full"
-                    />
-                  </UFormField>
-                  <UFormField name="retrieval.similarityThreshold" label="Similarity threshold">
-                    <UInputNumber
-                      id="settings-retrieval-similarityThreshold"
-                      v-model="state.retrieval.similarityThreshold"
-                      :min="0"
-                      :max="1"
-                      :step="0.01"
-                      class="w-full"
-                    />
-                  </UFormField>
-                  <UFormField name="retrieval.hybrid" label="Hybrid search">
-                    <USwitch
-                      id="settings-retrieval-hybrid"
-                      v-model="state.retrieval.hybrid"
-                      label="Combine vector and keyword search"
-                    />
-                  </UFormField>
-                  <UFormField name="retrieval.rerank" label="Reranking">
-                    <USwitch
-                      id="settings-retrieval-rerank"
-                      v-model="state.retrieval.rerank"
-                      label="Rerank retrieved hits"
-                    />
-                  </UFormField>
-                </div>
-              </AdminPanel>
-              <AdminPanel
-                title="Chunking"
-                description="Applies to future ingestion. Re-ingest existing sources to apply new chunking settings; unchanged content will be reprocessed when chunking changes."
-              >
-                <div class="grid gap-4 sm:grid-cols-2">
-                  <UFormField
-                    v-for="field in chunkingFields"
-                    :key="field.key"
-                    :name="`chunking.${field.key}`"
-                    :label="field.label"
-                  >
-                    <UInputNumber
-                      :id="`settings-chunking-${field.key}`"
-                      v-model="state.chunking[field.key]"
-                      :min="field.min"
-                      :max="field.max"
-                      class="w-full"
-                    />
-                  </UFormField>
-                </div>
-              </AdminPanel>
-            </template>
+                <UInputNumber
+                  :id="`settings-chunking-${field.key}`"
+                  v-model="state.chunking[field.key]"
+                  :min="field.min"
+                  :max="field.max"
+                  class="w-full"
+                />
+              </UFormField>
+            </div>
+          </AdminPanel>
+        </template>
 
-            <template #chat>
-              <AdminPanel
-                title="Chat limits"
-                description="Limits apply to the conversation context sent to the model. Full chat history stays saved."
+        <template #chat>
+          <AdminPanel
+            title="Chat limits"
+            description="Limits apply to the conversation context sent to the model. Full chat history stays saved."
+          >
+            <div class="grid gap-4 sm:grid-cols-2">
+              <UFormField
+                v-for="field in chatFields"
+                :key="field.key"
+                :name="`chat.${field.key}`"
+                :label="field.label"
               >
-                <div class="grid gap-4 sm:grid-cols-2">
-                  <UFormField
-                    v-for="field in chatFields"
-                    :key="field.key"
-                    :name="`chat.${field.key}`"
-                    :label="field.label"
-                  >
-                    <UInputNumber
-                      :id="`settings-chat-${field.key}`"
-                      v-model="state.chat[field.key]"
-                      :min="field.min"
-                      :max="field.max"
-                      class="w-full"
-                    />
-                  </UFormField>
-                </div>
-              </AdminPanel>
-            </template>
+                <UInputNumber
+                  :id="`settings-chat-${field.key}`"
+                  v-model="state.chat[field.key]"
+                  :min="field.min"
+                  :max="field.max"
+                  class="w-full"
+                />
+              </UFormField>
+            </div>
+          </AdminPanel>
+        </template>
 
-            <template #integrations>
-              <AdminPanel
-                title="Password reset email"
-                description="Resend sends password reset links from your verified sender address."
-              >
-                <div class="grid gap-4 sm:grid-cols-2">
-                  <UFormField name="email.from" label="Sender address">
-                    <UInput id="settings-email-from" v-model="state.email.from" class="w-full" />
-                  </UFormField>
-                  <div>
-                    <UFormField
-                      name="email.apiKey"
-                      label="Resend API key"
-                      :help="
-                        secretState['email.apiKey']
-                          ? 'Saved securely. Leave blank to keep; enter a value to rotate.'
-                          : 'No saved credential.'
-                      "
-                    >
-                      <UInput
-                        id="settings-email-apiKey"
-                        v-model="state.email.apiKey"
-                        type="password"
-                        autocomplete="new-password"
-                        :disabled="cleared['email.apiKey']"
-                        placeholder="New credential"
-                        class="w-full"
-                      />
-                    </UFormField>
-                    <UCheckbox
-                      v-if="secretState['email.apiKey']"
-                      id="settings-email-apiKey-remove"
-                      :model-value="cleared['email.apiKey'] === true"
-                      label="Remove saved resend api key"
-                      class="mt-2"
-                      @update:model-value="
-                        setCleared('email.apiKey', $event, () => (state.email.apiKey = ''))
-                      "
-                    />
-                  </div>
-                </div>
-              </AdminPanel>
-            </template>
-          </UTabs>
-        </UForm>
-      </UContainer>
-    </template>
-  </UDashboardPanel>
+        <template #integrations>
+          <AdminPanel
+            title="Password reset email"
+            description="Resend sends password reset links from your verified sender address."
+          >
+            <div class="grid gap-4 sm:grid-cols-2">
+              <UFormField name="email.from" label="Sender address">
+                <UInput id="settings-email-from" v-model="state.email.from" class="w-full" />
+              </UFormField>
+              <div>
+                <UFormField
+                  name="email.apiKey"
+                  label="Resend API key"
+                  :help="
+                    secretState['email.apiKey']
+                      ? 'Saved securely. Leave blank to keep; enter a value to rotate.'
+                      : 'No saved credential.'
+                  "
+                >
+                  <UInput
+                    id="settings-email-apiKey"
+                    v-model="state.email.apiKey"
+                    type="password"
+                    autocomplete="new-password"
+                    :disabled="cleared['email.apiKey']"
+                    placeholder="New credential"
+                    class="w-full"
+                  />
+                </UFormField>
+                <UCheckbox
+                  v-if="secretState['email.apiKey']"
+                  id="settings-email-apiKey-remove"
+                  :model-value="cleared['email.apiKey'] === true"
+                  label="Remove saved resend api key"
+                  class="mt-2"
+                  @update:model-value="
+                    setCleared('email.apiKey', $event, () => (state.email.apiKey = ''))
+                  "
+                />
+              </div>
+            </div>
+          </AdminPanel>
+        </template>
+      </UTabs>
+    </UForm>
+  </AdminWorkspace>
 </template>

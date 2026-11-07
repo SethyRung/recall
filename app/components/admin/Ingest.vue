@@ -206,7 +206,7 @@ async function previewPasteChunks() {
 
           <div v-if="previewChunks.length > 0" class="mt-4 space-y-2 border-t border-accented pt-3">
             <div class="flex items-center justify-between">
-              <p class="font-mono text-xs uppercase tracking-[0.14em] text-muted">
+              <p class="font-mono text-xs uppercase tracking-widest text-muted">
                 Dry-run Preview · {{ previewChunks.length }} Chunks
               </p>
             </div>
@@ -216,7 +216,7 @@ async function previewPasteChunks() {
                 :key="chunk.index"
                 class="border border-accented bg-elevated/40 p-2.5 rounded-sm"
               >
-                <p class="mb-1 font-mono text-[10px] text-muted">
+                <p class="mb-1 font-mono text-xs text-muted">
                   Chunk {{ chunk.index + 1 }} · {{ chunk.length }} chars
                 </p>
                 <p class="whitespace-pre-wrap font-mono text-xs text-default">

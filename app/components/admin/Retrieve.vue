@@ -69,8 +69,9 @@ function titleOf(hit: AdminRetrieveHit) {
     <p v-if="!configured" class="mt-3 text-sm text-warning">
       Embedding provider is not configured. Add its model and credential in
       <NuxtLink to="/admin/settings?section=knowledge" class="text-primary underline">
-        Knowledge settings </NuxtLink
-      >.
+        Knowledge settings
+      </NuxtLink>
+      <span>.</span>
     </p>
     <p v-else-if="!hasChunks" class="mt-3 text-sm text-warning">
       Knowledge base is empty. Ingest markdown first.
@@ -91,7 +92,7 @@ function titleOf(hit: AdminRetrieveHit) {
 
     <div v-if="result" class="mt-5 space-y-3">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <p class="font-mono text-xs uppercase tracking-[0.14em] text-muted">
+        <p class="font-mono text-xs uppercase tracking-widest text-muted">
           {{ passedCount }}/{{ result.hits.length }} passed · k={{ result.topK }} · threshold
           {{ result.threshold }}
         </p>

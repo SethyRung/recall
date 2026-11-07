@@ -78,11 +78,11 @@ const items = computed(() => [
         :key="item.label"
         class="flex items-center justify-between gap-4 px-3 py-2"
       >
-        <dt class="font-mono text-xs uppercase tracking-[0.14em] text-muted">{{ item.label }}</dt>
+        <dt class="font-mono text-xs uppercase tracking-widest text-muted">{{ item.label }}</dt>
         <dd class="flex min-w-0 items-center gap-2">
-          <span class="truncate font-mono text-xs text-highlighted" :title="item.value">{{
-            item.value
-          }}</span>
+          <span class="truncate font-mono text-xs text-highlighted" :title="item.value">
+            {{ item.value }}
+          </span>
           <UIcon
             :name="item.ok ? 'i-lucide-check' : 'i-lucide-triangle-alert'"
             class="size-3.5 shrink-0"
@@ -97,7 +97,8 @@ const items = computed(() => [
     </p>
     <p v-else class="mt-3 text-xs text-dimmed">
       Manage models, credentials and retrieval in
-      <NuxtLink to="/admin/settings" class="text-primary underline">Admin settings</NuxtLink>.
+      <NuxtLink to="/admin/settings" class="text-primary underline">Admin settings</NuxtLink>
+      <span>.</span>
       Changes apply to new requests without a restart.
     </p>
   </AdminPanel>

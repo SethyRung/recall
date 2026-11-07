@@ -38,17 +38,19 @@ const items = computed(() => [
 </script>
 
 <template>
-  <div class="grid grid-cols-2 border-t border-l border-accented lg:grid-cols-4">
+  <div class="grid grid-cols-2 border-t border-l border-accented bg-muted/20 xl:grid-cols-4">
     <div
       v-for="item in items"
       :key="item.kicker"
-      class="border-r border-b border-accented px-5 py-4"
+      class="min-w-0 border-r border-b border-accented px-4 py-5 sm:px-5"
     >
-      <p class="font-mono text-xs uppercase tracking-[0.14em] text-muted">{{ item.kicker }}</p>
+      <p class="text-xs uppercase tracking-widest text-muted">{{ item.kicker }}</p>
 
-      <p class="mt-1 text-2xl font-bold tracking-tight text-highlighted">{{ item.value }}</p>
+      <p class="mt-3 font-pixel text-2xl leading-tight text-highlighted sm:text-3xl">
+        {{ item.value }}
+      </p>
 
-      <p class="mt-1 text-xs" :class="item.warn ? 'text-warning' : 'text-dimmed'">
+      <p class="mt-2 text-xs leading-5" :class="item.warn ? 'text-warning' : 'text-muted'">
         {{ item.hint }}
       </p>
     </div>
