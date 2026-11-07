@@ -78,8 +78,8 @@ function handleClear() {
 
           <h1 class="text-5xl sm:text-6xl lg:text-7xl font-semibold text-highlighted">
             {{ heading.lead }}
-            <span class="font-pixel font-medium text-primary">{{ heading.accent }}</span
-            >{{ heading.trail }}
+            <span class="font-pixel font-medium text-primary">{{ heading.accent }}</span>
+            <span>{{ heading.trail }}</span>
           </h1>
 
           <p class="text-lg sm:text-xl text-muted leading-relaxed">

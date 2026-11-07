@@ -118,10 +118,10 @@ async function onSubmit(event: FormSubmitEvent<SignUpInput>) {
 
     <p class="text-center text-xs text-muted">
       By signing up, you agree to the
-      <NuxtLink to="/" class="underline hover:text-toned"> Terms of Service </NuxtLink>
+      <NuxtLink to="/" class="underline hover:text-toned">Terms of Service</NuxtLink>
       and
-      <NuxtLink to="/" class="underline hover:text-toned"> Privacy Policy </NuxtLink>
-      .
+      <NuxtLink to="/" class="underline hover:text-toned">Privacy Policy</NuxtLink>
+      <span>.</span>
     </p>
   </UCard>
 </template>

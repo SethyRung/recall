@@ -88,7 +88,6 @@ async function signInWith(provider: "google" | "github") {}
           <template #trailing>
             <button
               type="button"
-              :aria-label="showPassword ? 'Hide password' : 'Show password'"
               class="text-neutral-500 hover:text-neutral-300"
               @click="showPassword = !showPassword"
             >
@@ -125,10 +124,10 @@ async function signInWith(provider: "google" | "github") {}
 
     <p class="text-center text-xs text-muted">
       By signing in, you agree to the
-      <NuxtLink to="/" class="underline hover:text-toned"> Terms of Service </NuxtLink>
+      <NuxtLink to="/" class="underline hover:text-toned">Terms of Service</NuxtLink>
       and
-      <NuxtLink to="/" class="underline hover:text-toned"> Privacy Policy </NuxtLink>
-      .
+      <NuxtLink to="/" class="underline hover:text-toned">Privacy Policy</NuxtLink>
+      <span>.</span>
     </p>
   </UCard>
 </template>

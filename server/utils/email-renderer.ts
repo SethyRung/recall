@@ -50,7 +50,7 @@ const components: Record<string, NodeHandler> = {
   </style>
 </head>
 <body style="margin:0;padding:0;background-color:#f5f5f2;color:#20221f;font-family:Arial,Helvetica,sans-serif;">
-  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;" aria-hidden="true">${escapeHtml(node[1].preview)}</div>
+  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${escapeHtml(node[1].preview)}</div>
   ${content}
 </body>
 </html>`;

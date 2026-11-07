@@ -9,6 +9,7 @@ export default defineConfig({
   singleQuote: false,
   trailingComma: "all",
   printWidth: 100,
+  htmlWhitespaceSensitivity: "ignore",
   ignorePatterns: [
     "node_modules",
     ".agents",

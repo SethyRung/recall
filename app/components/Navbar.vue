@@ -18,7 +18,6 @@
         icon="i-lucide-circle-plus"
         to="/chat"
         class="lg:hidden"
-        aria-label="New chat"
       />
     </template>
   </UDashboardNavbar>
