@@ -108,12 +108,8 @@ async function close(id: string) {
         v-for="tab in items"
         :key="tab.id"
         :data-tab-id="tab.id"
-        class="group/tab flex shrink-0 select-none items-center border-t border-r border-r-accented"
-        :class="
-          tab.id === activeId
-            ? 'border-t-primary bg-default'
-            : 'border-t-transparent hover:bg-elevated'
-        "
+        class="flex shrink-0 select-none items-center border-t border-r border-r-accented"
+        :class="tab.id === activeId ? 'border-t-primary bg-default' : 'border-t-transparent'"
       >
         <UButton
           :to="getChatTabLocation(tab)"
@@ -122,7 +118,7 @@ async function close(id: string) {
           :draggable="false"
           color="neutral"
           variant="ghost"
-          class="h-full min-w-0 cursor-grab gap-3 rounded-none px-3.5 py-0 text-xs font-normal hover:bg-transparent active:cursor-grabbing md:px-4"
+          class="h-full min-w-0 cursor-grab gap-3 rounded-none px-3.5 py-0 text-xs font-normal hover:bg-transparent active:bg-transparent md:px-4"
           :class="tab.id === activeId ? 'text-toned' : 'text-muted'"
           @keydown.alt.shift.left.prevent="move(tab.id, -1)"
           @keydown.alt.shift.right.prevent="move(tab.id, 1)"
@@ -139,7 +135,7 @@ async function close(id: string) {
           color="neutral"
           variant="ghost"
           size="xs"
-          class="mr-2 size-5 shrink-0 justify-center rounded-none p-0 text-dimmed hover:text-highlighted"
+          class="mr-2 size-5 shrink-0 justify-center rounded-none p-0 text-dimmed hover:bg-transparent active:bg-transparent"
           :ui="{ leadingIcon: 'size-3.5' }"
           @click="close(tab.id)"
         />
