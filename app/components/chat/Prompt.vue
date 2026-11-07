@@ -121,7 +121,7 @@ defineExpose({ focus });
           class="rounded-none bg-muted/50 ring-accented px-3.5 pt-3.5 pb-2.5 gap-1 backdrop-blur-none md:px-5 md:pt-4 md:pb-3"
           :ui="{
             header: 'mb-1.5 gap-3 text-xs',
-            base: 'pl-6 py-2 text-base sm:text-sm leading-6',
+            base: 'pl-6 py-2 text-sm leading-6',
             leading: 'ps-0 inset-y-2',
             footer: 'border-t border-accented pt-3 mt-2',
           }"
@@ -139,7 +139,7 @@ defineExpose({ focus });
             <span class="text-muted">~/sethy</span>
           </template>
           <template #leading>
-            <span class="text-primary text-lg leading-6">❯</span>
+            <span class="text-primary text-base leading-6 sm:text-lg">❯</span>
           </template>
           <template #footer>
             <div class="flex w-full items-center justify-between gap-4" @mousedown.prevent>

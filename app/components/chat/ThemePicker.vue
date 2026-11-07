@@ -1,21 +1,26 @@
 <script setup lang="ts">
-const { themes, theme, themeOpen, setTheme } = useTerminal();
+const { themes, savedTheme, themeOpen, previewTheme, setTheme } = useTerminal();
 const list = useTemplateRef("list");
 const groups = [
-  {
-    id: "themes",
-    items: themes.map((option) => ({
+  { id: "light", label: "Light" },
+  { id: "dark", label: "Dark" },
+].map((group) => ({
+  ...group,
+  items: themes
+    .filter((option) => option.mode === group.id)
+    .map((option) => ({
       id: option.id,
       label: option.label,
       onSelect: () => setTheme(option.id),
     })),
-  },
-];
+}));
 
 function focusList(event: Event) {
   event.preventDefault();
   list.value?.querySelector<HTMLElement>('[role="listbox"]')?.focus();
 }
+
+onBeforeUnmount(() => previewTheme());
 </script>
 
 <template>
@@ -24,6 +29,7 @@ function focusList(event: Event) {
     title="Color Scheme"
     description="Choose a color scheme for Recall."
     :content="{ onOpenAutoFocus: focusList }"
+    :overlay="false"
     :ui="{
       content: 'max-w-sm rounded-none',
       header: 'min-h-0 p-4 sm:px-4',
@@ -38,14 +44,16 @@ function focusList(event: Event) {
         <UCommandPalette
           :input="false"
           :groups="groups"
-          :model-value="theme.id"
+          :model-value="savedTheme.id"
           value-key="id"
           label-key="label"
           loop
+          @highlight="previewTheme($event?.value)"
           :ui="{
             content: 'outline-none',
             viewport: 'max-h-96',
             group: 'p-0',
+            label: 'px-2 py-2 text-xs font-medium tracking-wide text-muted',
             item: 'items-center gap-2 px-2 py-2 text-sm before:rounded-none data-highlighted:text-primary',
             itemLabel: 'text-inherit',
             itemTrailingIcon: 'hidden',
@@ -57,15 +65,15 @@ function focusList(event: Event) {
           </template>
           <template #item-label="{ item }">
             {{ item.label }}
-            <span v-if="item.id === theme.id" class="text-muted">(current)</span>
+            <span v-if="item.id === savedTheme.id" class="text-muted">(current)</span>
           </template>
         </UCommandPalette>
       </div>
     </template>
     <template #footer>
-      <span>↑↓ navigate</span>
-      <span>enter select</span>
-      <span>esc close</span>
+      <span>↑↓ preview</span>
+      <span>enter apply</span>
+      <span>esc cancel</span>
     </template>
   </UModal>
 </template>

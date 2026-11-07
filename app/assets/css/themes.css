@@ -1,0 +1,164 @@
+/* iTerm2 palettes: https://github.com/mbadolato/iTerm2-Color-Schemes/tree/b84cd1e68c9033d967fccd9febbac3072d127b7b/schemes
+   Surfaces and text contrast are adapted for interface controls. */
+
+@theme static {
+  --color-terminal-50: color-mix(in srgb, var(--terminal-accent, #e6b450) 5%, white);
+  --color-terminal-100: color-mix(in srgb, var(--terminal-accent, #e6b450) 10%, white);
+  --color-terminal-200: color-mix(in srgb, var(--terminal-accent, #e6b450) 25%, white);
+  --color-terminal-300: color-mix(in srgb, var(--terminal-accent, #e6b450) 50%, white);
+  --color-terminal-400: color-mix(in srgb, var(--terminal-accent, #e6b450) 75%, white);
+  --color-terminal-500: var(--terminal-accent, #e6b450);
+  --color-terminal-600: color-mix(in srgb, var(--terminal-accent, #e6b450) 85%, black);
+  --color-terminal-700: color-mix(in srgb, var(--terminal-accent, #e6b450) 70%, black);
+  --color-terminal-800: color-mix(in srgb, var(--terminal-accent, #e6b450) 50%, black);
+  --color-terminal-900: color-mix(in srgb, var(--terminal-accent, #e6b450) 30%, black);
+  --color-terminal-950: color-mix(in srgb, var(--terminal-accent, #e6b450) 15%, black);
+}
+
+:root[data-terminal-theme] {
+  --terminal-status-strength: 100%;
+  --ui-primary: var(--terminal-accent);
+  --ui-secondary: color-mix(
+    in srgb,
+    var(--terminal-magenta) var(--terminal-status-strength),
+    black
+  );
+  --ui-success: color-mix(in srgb, var(--terminal-green) var(--terminal-status-strength), black);
+  --ui-info: color-mix(in srgb, var(--terminal-blue) var(--terminal-status-strength), black);
+  --ui-warning: color-mix(in srgb, var(--terminal-yellow) var(--terminal-status-strength), black);
+  --ui-error: color-mix(in srgb, var(--terminal-red) var(--terminal-status-strength), black);
+  --ui-text-dimmed: color-mix(in srgb, var(--terminal-fg) 75%, var(--terminal-bg));
+  --ui-text-muted: color-mix(in srgb, var(--terminal-fg) 85%, var(--terminal-bg));
+  --ui-text-toned: color-mix(in srgb, var(--terminal-fg) 95%, var(--terminal-bg));
+  --ui-text: var(--terminal-fg);
+  --ui-text-highlighted: var(--terminal-fg);
+  --ui-text-inverted: var(--terminal-bg);
+  --ui-bg: var(--terminal-bg);
+  --ui-bg-muted: color-mix(in srgb, var(--terminal-bg) 97%, var(--terminal-fg));
+  --ui-bg-elevated: color-mix(in srgb, var(--terminal-bg) 94%, var(--terminal-fg));
+  --ui-bg-accented: color-mix(in srgb, var(--terminal-bg) 90%, var(--terminal-fg));
+  --ui-bg-inverted: var(--terminal-fg);
+  --ui-border: color-mix(in srgb, var(--terminal-bg) 80%, var(--terminal-fg));
+  --ui-border-muted: color-mix(in srgb, var(--terminal-bg) 88%, var(--terminal-fg));
+  --ui-border-accented: color-mix(in srgb, var(--terminal-bg) 74%, var(--terminal-fg));
+  --ui-border-inverted: var(--terminal-fg);
+}
+
+:root[data-terminal-theme$="-light"] {
+  --terminal-status-strength: 60%;
+  --ui-text-dimmed: var(--terminal-fg);
+  --ui-text-muted: color-mix(in srgb, var(--terminal-fg) 95%, black);
+  --ui-text-toned: color-mix(in srgb, var(--terminal-fg) 90%, black);
+  --ui-text: color-mix(in srgb, var(--terminal-fg) 85%, black);
+  --ui-text-highlighted: color-mix(in srgb, var(--terminal-fg) 75%, black);
+}
+
+:root[data-terminal-theme="ayu-light"] {
+  --terminal-bg: #f8f9fa;
+  --terminal-fg: #5c6166;
+  --terminal-accent: color-mix(in srgb, #ffaa33 55%, black);
+  --terminal-red: #ea6c6d;
+  --terminal-green: #6cbf43;
+  --terminal-yellow: #eca944;
+  --terminal-blue: #3199e1;
+  --terminal-magenta: #9e75c7;
+}
+
+:root[data-terminal-theme="ayu-dark"] {
+  --terminal-bg: #0b0e14;
+  --terminal-fg: #bfbdb6;
+  --terminal-accent: #e6b450;
+  --terminal-red: #ea6c73;
+  --terminal-green: #7fd962;
+  --terminal-yellow: #f9af4f;
+  --terminal-blue: #53bdfa;
+  --terminal-magenta: #cda1fa;
+}
+
+:root[data-terminal-theme="catppuccin-light"] {
+  --terminal-bg: #eff1f5;
+  --terminal-fg: #4c4f69;
+  --terminal-accent: color-mix(in srgb, #ea76cb 60%, black);
+  --terminal-red: #d20f39;
+  --terminal-green: #40a02b;
+  --terminal-yellow: #df8e1d;
+  --terminal-blue: #1e66f5;
+  --terminal-magenta: #ea76cb;
+}
+
+:root[data-terminal-theme="catppuccin-dark"] {
+  --terminal-bg: #1e1e2e;
+  --terminal-fg: #cdd6f4;
+  --terminal-accent: #f5c2e7;
+  --terminal-red: #f38ba8;
+  --terminal-green: #a6e3a1;
+  --terminal-yellow: #f9e2af;
+  --terminal-blue: #89b4fa;
+  --terminal-magenta: #f5c2e7;
+}
+
+:root[data-terminal-theme="github-light"] {
+  --terminal-bg: #ffffff;
+  --terminal-fg: #1f2328;
+  --terminal-accent: #0969da;
+  --terminal-red: #cf222e;
+  --terminal-green: #116329;
+  --terminal-yellow: #4d2d00;
+  --terminal-blue: #0969da;
+  --terminal-magenta: #8250df;
+}
+
+:root[data-terminal-theme="github-dark"] {
+  --terminal-bg: #0d1117;
+  --terminal-fg: #e6edf3;
+  --terminal-accent: #58a6ff;
+  --terminal-red: #ff7b72;
+  --terminal-green: #3fb950;
+  --terminal-yellow: #d29922;
+  --terminal-blue: #58a6ff;
+  --terminal-magenta: #bc8cff;
+}
+
+:root[data-terminal-theme="everforest-light"] {
+  --terminal-bg: #efebd4;
+  --terminal-fg: #5c6a72;
+  --terminal-accent: color-mix(in srgb, #8da101 60%, black);
+  --terminal-red: #f85552;
+  --terminal-green: #8da101;
+  --terminal-yellow: #dfa000;
+  --terminal-blue: #3a94c5;
+  --terminal-magenta: #df69ba;
+}
+
+:root[data-terminal-theme="everforest-dark"] {
+  --terminal-bg: #232a2e;
+  --terminal-fg: #d3c6aa;
+  --terminal-accent: #a7c080;
+  --terminal-red: #e67e80;
+  --terminal-green: #a7c080;
+  --terminal-yellow: #dbbc7f;
+  --terminal-blue: #7fbbb3;
+  --terminal-magenta: #d699b6;
+}
+
+:root[data-terminal-theme="gruvbox-light"] {
+  --terminal-bg: #fbf1c7;
+  --terminal-fg: #3c3836;
+  --terminal-accent: color-mix(in srgb, #b57614 65%, black);
+  --terminal-red: #9d0006;
+  --terminal-green: #79740e;
+  --terminal-yellow: #b57614;
+  --terminal-blue: #076678;
+  --terminal-magenta: #8f3f71;
+}
+
+:root[data-terminal-theme="gruvbox-dark"] {
+  --terminal-bg: #282828;
+  --terminal-fg: #ebdbb2;
+  --terminal-accent: #fabd2f;
+  --terminal-red: color-mix(in srgb, #fb4934 90%, #ebdbb2);
+  --terminal-green: #b8bb26;
+  --terminal-yellow: #fabd2f;
+  --terminal-blue: #83a598;
+  --terminal-magenta: #d3869b;
+}

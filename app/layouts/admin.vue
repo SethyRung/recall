@@ -31,9 +31,8 @@ const activeSection = computed(
 
 watch(
   theme,
-  ({ mode, primary }) => {
+  ({ mode }) => {
     colorMode.preference = mode;
-    updateAppConfig({ ui: { colors: { primary } } });
   },
   { immediate: true },
 );

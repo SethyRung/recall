@@ -5,30 +5,47 @@ const commands = [
 ] as const;
 
 const themes = [
-  { id: "amber", label: "terminal", mode: "dark", primary: "sand" },
-  { id: "light", label: "light", mode: "light", primary: "sand" },
-  { id: "solarized-light", label: "solarized light", mode: "light", primary: "cyan" },
-  { id: "colorblind-light", label: "colorblind-friendly light", mode: "light", primary: "blue" },
-  { id: "dark", label: "dark", mode: "dark", primary: "sand" },
-  { id: "solarized-dark", label: "solarized dark", mode: "dark", primary: "cyan" },
-  { id: "colorblind-dark", label: "colorblind-friendly dark", mode: "dark", primary: "blue" },
-  { id: "tokyo-night", label: "tokyo night", mode: "dark", primary: "indigo" },
-  { id: "forest", label: "forest", mode: "dark", primary: "sage" },
-  { id: "ice", label: "ice", mode: "dark", primary: "frost" },
+  { id: "ayu-light", label: "Ayu Light", mode: "light" },
+  { id: "ayu-dark", label: "Ayu Dark", mode: "dark" },
+  { id: "catppuccin-light", label: "Catppuccin Latte (Light)", mode: "light" },
+  { id: "catppuccin-dark", label: "Catppuccin Mocha (Dark)", mode: "dark" },
+  { id: "github-light", label: "GitHub Light", mode: "light" },
+  { id: "github-dark", label: "GitHub Dark", mode: "dark" },
+  { id: "everforest-light", label: "Everforest Light", mode: "light" },
+  { id: "everforest-dark", label: "Everforest Dark", mode: "dark" },
+  { id: "gruvbox-light", label: "Gruvbox Light", mode: "light" },
+  { id: "gruvbox-dark", label: "Gruvbox Dark", mode: "dark" },
 ] as const;
 
 export function useTerminal() {
   const { newTab } = useChatTabs();
   const preference = useCookie<string>("recall-terminal-theme", {
-    default: () => "amber",
+    default: () => "ayu-dark",
     maxAge: 60 * 60 * 24 * 365,
     sameSite: "lax",
   });
-  const theme = computed(
-    () => themes.find((candidate) => candidate.id === preference.value) ?? themes[0],
+  const savedTheme = computed(
+    () =>
+      themes.find((candidate) => candidate.id === preference.value) ??
+      themes[preference.value === "light" || preference.value?.endsWith("-light") ? 0 : 1],
   );
   const helpOpen = useState("terminal-help", () => false);
   const themeOpen = useState("terminal-theme-picker", () => false);
+  const preview = useState<(typeof themes)[number]["id"] | null>(
+    "terminal-theme-preview",
+    () => null,
+  );
+  const theme = computed(
+    () =>
+      (themeOpen.value && themes.find((candidate) => candidate.id === preview.value)) ||
+      savedTheme.value,
+  );
+
+  watch(themeOpen, () => (preview.value = null), { flush: "sync" });
+
+  function previewTheme(id?: unknown) {
+    preview.value = themes.find((candidate) => candidate.id === id)?.id ?? null;
+  }
 
   function setTheme(id: (typeof themes)[number]["id"]) {
     preference.value = id;
@@ -51,5 +68,15 @@ export function useTerminal() {
     }
   }
 
-  return { commands, themes, theme, helpOpen, themeOpen, setTheme, runCommand };
+  return {
+    commands,
+    themes,
+    theme,
+    savedTheme,
+    helpOpen,
+    themeOpen,
+    previewTheme,
+    setTheme,
+    runCommand,
+  };
 }
