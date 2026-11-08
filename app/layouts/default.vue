@@ -46,7 +46,7 @@ watch(
   { flush: "sync" },
 );
 watch(openTabs, saveTabs, { deep: true, flush: "sync" });
-const sidebarOpen = ref(false);
+const sidebarOpen = ref(true);
 const searchOpen = ref(false);
 
 const navigationItems = computed<NavigationMenuItem[]>(() => [
@@ -55,25 +55,29 @@ const navigationItems = computed<NavigationMenuItem[]>(() => [
     icon: "i-lucide-house",
     to: "/",
     active: route.path === "/",
+    onSelect: closeSidebar,
   },
   {
     label: "New session",
     icon: "i-lucide-square-terminal",
     active: route.path === "/chat",
 
-    onSelect: () => newTab(),
+    onSelect: () => {
+      closeSidebar();
+      newTab();
+    },
   },
   {
     label: "Find a session",
     icon: "i-lucide-search",
 
     onSelect: () => {
+      closeSidebar();
       searchOpen.value = true;
     },
   },
 ]);
 
-const sidebar = useTemplateRef("sidebar");
 const sidebarToggle = useTemplateRef("sidebarToggle");
 const desktop = useMediaQuery("(min-width: 768px)");
 const topics = [
@@ -144,42 +148,31 @@ function getChatActions(chat: { id: string; label: string }): DropdownMenuItem[]
   ];
 }
 
-watch(
-  () => route.fullPath,
-  () => {
-    sidebarOpen.value = false;
-  },
-);
+function closeSidebar() {
+  if (!desktop.value) sidebarOpen.value = false;
+}
 
-watch(desktop, (value) => {
-  if (value) sidebarOpen.value = false;
-});
-
-watch(sidebarOpen, async (open) => {
-  await nextTick();
-  if (open) {
-    sidebar.value?.querySelector("a")?.focus();
-  } else if (sidebar.value?.contains(document.activeElement)) {
+function restoreSidebarFocus(event: Event) {
+  event.preventDefault();
+  if (!themeOpen.value && !helpOpen.value && !searchOpen.value) {
     sidebarToggle.value?.$el?.focus();
   }
-});
+}
+
+watch(() => route.fullPath, closeSidebar);
 
 defineShortcuts(
   computed(() => ({
-    escape:
-      sidebarOpen.value && !themeOpen.value && !helpOpen.value && !searchOpen.value
-        ? () => {
-            sidebarOpen.value = false;
-          }
-        : false,
     meta_o: { usingInput: true, handler: () => newTab() },
     meta_k: {
       usingInput: true,
       handler: () => {
+        closeSidebar();
         searchOpen.value = true;
       },
     },
     "?": () => {
+      closeSidebar();
       helpOpen.value = !helpOpen.value;
     },
   })),
@@ -212,32 +205,53 @@ defineShortcuts(
       </header>
 
       <div class="relative flex min-h-0 flex-1">
-        <UButton
-          color="neutral"
-          variant="ghost"
-          v-if="sidebarOpen"
-          class="absolute inset-0 z-20 rounded-none bg-default/80 p-0 hover:bg-default/80 md:hidden"
-          @click="sidebarOpen = false"
-        />
-        <aside
-          ref="sidebar"
+        <USidebar
+          v-model:open="sidebarOpen"
           id="terminal-sidebar"
-          class="absolute inset-y-0 left-0 z-30 w-64 max-w-full shrink-0 flex-col overflow-y-auto border-r border-accented bg-default md:bg-muted/50 md:static md:z-auto md:flex md:w-52 md:max-w-none lg:w-60"
-          :class="sidebarOpen ? 'flex' : 'hidden'"
+          title="Explorer"
+          collapsible="icon"
+          rail
+          breakpoint="md"
+          mode="slideover"
+          class="h-full shrink-0"
+          :menu="{
+            content: { onCloseAutoFocus: restoreSidebarFocus },
+            ui: {
+              content: 'w-64 max-w-full divide-y-0 rounded-none ring-accented',
+              overlay: 'bg-default/80',
+            },
+          }"
+          :ui="{
+            gap: 'w-52 lg:w-60',
+            container: 'absolute h-full w-52 border-accented lg:w-60',
+            inner: 'divide-y-0 bg-muted/50',
+            header: 'h-10',
+            title: 'text-xs font-normal tracking-widest text-muted uppercase',
+            body: 'gap-0 p-0',
+            footer: 'block p-0',
+          }"
         >
-          <div
-            class="flex h-11 shrink-0 items-center justify-between px-5 text-xs tracking-widest text-muted"
-          >
-            <span>EXPLORER</span>
-          </div>
+          <template #title="{ state }">
+            <span v-if="state === 'expanded'">Explorer</span>
+            <UButton
+              v-else
+              icon="i-lucide-panel-left"
+              color="neutral"
+              variant="ghost"
+              square
+              @click="sidebarOpen = !sidebarOpen"
+            />
+          </template>
 
           <UNavigationMenu
             :items="navigationItems"
+            :collapsed="!sidebarOpen"
+            tooltip
             orientation="vertical"
             color="neutral"
             class="px-2.5 pt-2 pb-6"
             :ui="{
-              link: 'min-h-9 gap-2.5 border-l-2 border-l-transparent text-left text-xs font-normal before:inset-0 before:rounded-none data-active:border-l-primary',
+              link: 'min-h-9 gap-2.5 border-l-2 border-l-transparent text-left text-xs font-normal before:inset-0 before:rounded-none data-active:border-l-primary group-data-[state=collapsed]/sidebar:justify-center',
               linkLeadingIcon: 'size-4 text-inherit',
             }"
           >
@@ -247,13 +261,14 @@ defineShortcuts(
           </UNavigationMenu>
 
           <div
+            v-show="sidebarOpen"
             class="flex items-center gap-2 px-6 text-xs text-toned border-t border-accented pt-5"
           >
             <UIcon name="i-lucide-history" class="size-3.5" />
             <span>Sessions</span>
             <span class="ml-auto text-xs text-dimmed">{{ chats.length }}</span>
           </div>
-          <div class="min-h-16 flex-1 overflow-y-auto px-2.5 py-4">
+          <div v-show="sidebarOpen" class="min-h-16 flex-1 overflow-y-auto px-2.5 py-4">
             <div
               v-if="historyFailed"
               class="px-3 py-1 text-xs text-muted [&_p]:mt-2.5 [&_p]:leading-loose"
@@ -280,7 +295,7 @@ defineShortcuts(
               </p>
             </div>
             <div v-for="group in groups" :key="group.id" class="not-first:mt-3">
-              <p class="px-3 py-1.5 text-xs text-dimmed">{{ group.label }}</p>
+              <p class="px-3 py-1.5 text-xs font-semibold text-muted">{{ group.label }}</p>
               <div
                 v-for="chat in group.items"
                 :key="chat.id"
@@ -292,7 +307,7 @@ defineShortcuts(
                   :to="`/chat/${chat.id}`"
                   class="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2 text-xs text-muted group-data-[active=true]/session:text-primary"
                 >
-                  <span class="text-dimmed">›</span>
+                  <UIcon :name="chat.icon" class="size-4 shrink-0 text-dimmed" />
                   <span class="truncate">{{ chat.label }}</span>
                 </NuxtLink>
                 <UDropdownMenu :items="getChatActions(chat)" :content="{ align: 'start' }">
@@ -308,35 +323,44 @@ defineShortcuts(
             </div>
           </div>
 
-          <UDropdownMenu
-            :items="userMenuItems"
-            :content="{ align: 'start' }"
-            :ui="{ content: 'w-(--reka-dropdown-menu-trigger-width)' }"
-          >
-            <UButton
-              color="neutral"
-              variant="ghost"
-              class="w-full gap-2.5 border-t border-accented px-5 py-4 text-left font-normal hover:bg-elevated"
+          <template #footer>
+            <UDropdownMenu
+              :items="userMenuItems"
+              :content="{ align: 'start' }"
+              :ui="{ content: sidebarOpen ? 'w-(--reka-dropdown-menu-trigger-width)' : 'w-48' }"
             >
-              <span
-                class="grid size-7 shrink-0 place-items-center border border-accented text-base text-primary"
+              <UButton
+                color="neutral"
+                variant="ghost"
+                :title="isSignedIn ? user?.name : 'visitor'"
+                class="w-full gap-2.5 border-t border-accented py-4 text-left font-normal hover:bg-elevated"
+                :class="sidebarOpen ? 'px-5' : 'justify-center px-2'"
               >
-                {{ isSignedIn ? user?.name?.slice(0, 1).toLowerCase() : "~" }}
-              </span>
-              <span class="grid text-xs">
-                <span>{{ isSignedIn ? user?.name : "visitor" }}</span>
-                <span class="text-muted">{{ isSignedIn ? "signed in" : "no account needed" }}</span>
-              </span>
-              <UIcon name="i-lucide-chevrons-up-down" class="size-3.5 text-muted ml-auto" />
-            </UButton>
-          </UDropdownMenu>
-        </aside>
+                <span
+                  class="grid size-7 shrink-0 place-items-center border border-accented text-base text-primary"
+                >
+                  {{ isSignedIn ? user?.name?.slice(0, 1).toLowerCase() : "~" }}
+                </span>
+                <span v-if="sidebarOpen" class="grid text-xs">
+                  <span>{{ isSignedIn ? user?.name : "visitor" }}</span>
+                  <span class="text-muted">
+                    {{ isSignedIn ? "signed in" : "no account needed" }}
+                  </span>
+                </span>
+                <UIcon
+                  v-if="sidebarOpen"
+                  name="i-lucide-chevrons-up-down"
+                  class="size-3.5 text-muted ml-auto"
+                />
+              </UButton>
+            </UDropdownMenu>
+          </template>
+        </USidebar>
 
         <main
           id="terminal-main"
           class="flex min-h-0 min-w-0 flex-1 flex-col outline-none"
           tabindex="-1"
-          :inert="sidebarOpen"
         >
           <div class="flex h-11 shrink-0 items-stretch border-b border-accented bg-muted/50">
             <UButton
