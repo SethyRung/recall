@@ -1,22 +1,11 @@
 import { db } from "@nuxthub/db";
 import { chats, messages } from "@nuxthub/db/schema";
-import {
-  convertToModelMessages,
-  createUIMessageStream,
-  createUIMessageStreamResponse,
-  stepCountIs,
-  streamText,
-  toUIMessageStream,
-  tool,
-  type UIMessage,
-} from "ai";
+import { createUIMessageStream, createUIMessageStreamResponse, type UIMessage } from "ai";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { SYSTEM_PROMPT } from "#server/constants";
 import { buildModelContext, userMessageSchema } from "../../utils/chat-input";
-import { createModelRouter, getModelErrorMessage } from "../../utils/model-router";
-
-const router = createModelRouter();
+import { getModelErrorMessage } from "../../utils/model-router";
+import { createChatStream } from "../../utils/chat-stream";
 
 export default defineEventHandler(async (event) => {
   assertJsonRequest(event);
@@ -127,56 +116,10 @@ export default defineEventHandler(async (event) => {
     if (title) await db.update(chats).set({ title }).where(eq(chats.id, id));
   }
 
-  const controller = new AbortController();
-  event.node.res.once("close", () => {
-    if (!event.node.res.writableFinished) controller.abort();
-  });
-  const tools = {
-    get_information: tool({
-      description:
-        "Retrieve information about Sethy. Call once per turn, resolving pronouns and follow-ups from history, then answer from the returned sources.",
-      inputSchema: z.object({ question: z.string().trim().min(1).max(2000) }),
-      execute: async ({ question }, { abortSignal }) => {
-        try {
-          const { hits } = await searchChunks(question, settings, abortSignal);
-          return hits.filter((hit) => hit.passed);
-        } catch (error) {
-          throw new Error(sanitizeProviderError(error, "Retrieval unavailable"));
-        }
-      },
-    }),
-  };
-  const modelMessages = await convertToModelMessages(context);
   const stream = createUIMessageStream({
     onError: getModelErrorMessage,
-    execute: ({ writer }) => {
-      const routed = router.stream({
-        models,
-        ...settings.routing,
-        abortSignal: controller.signal,
-        start: (config, signal) =>
-          streamText({
-            model: createChatModel(config),
-            system: SYSTEM_PROMPT,
-            messages: modelMessages,
-            tools,
-            maxOutputTokens: settings.chat.maxOutputTokens,
-            maxRetries: 0,
-            streamRetries: 0,
-            stopWhen: stepCountIs(2),
-            abortSignal: signal,
-            onError: () => {},
-          }).stream,
-      });
-      writer.merge(
-        toUIMessageStream({
-          stream: routed,
-          tools,
-          sendSources: true,
-          sendReasoning: false,
-          onError: getModelErrorMessage,
-        }),
-      );
+    execute: async ({ writer }) => {
+      writer.merge(await createChatStream(event, context, settings));
     },
     onFinish: async ({ messages: streamed }) => {
       const answers = streamed.filter(
@@ -199,5 +142,8 @@ export default defineEventHandler(async (event) => {
     },
   });
   setHeader(event, "cache-control", "no-store");
-  return createUIMessageStreamResponse({ stream });
+  return createUIMessageStreamResponse({
+    stream,
+    headers: { "cache-control": "no-store", "x-accel-buffering": "no" },
+  });
 });
