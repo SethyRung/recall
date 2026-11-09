@@ -18,11 +18,13 @@ definePageMeta({ keepalive: { max: 20 } });
 
 const route = useRoute();
 const toast = useToast();
+const chatHeaders = useChatRequestHeaders();
 const { data: chatEnvelope } = await useFetch<ApiResponse<ChatDetail>>(
   `/api/chats/${route.params.id}`,
   {
     key: `chat-${route.params.id}`,
     cache: "force-cache",
+    headers: chatHeaders,
   },
 );
 
@@ -38,6 +40,7 @@ useHead({ title: () => `${chatData.value?.title || "Chat"} · Recall` });
 
 const { data: votesEnvelope, refresh: refreshVotes } = await useLazyFetch<ApiResponse<Vote[]>>(
   `/api/chats/${route.params.id}/votes`,
+  { headers: chatHeaders },
 );
 
 const votes = ref<Vote[]>(

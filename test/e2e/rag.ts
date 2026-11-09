@@ -51,7 +51,8 @@ async function request(
   const response = await fetch(new URL(path, origin), {
     method: options.method ?? (body === undefined ? "GET" : "POST"),
     headers: {
-      ...(body === undefined ? {} : { "content-type": "application/json", origin }),
+      origin,
+      ...(body === undefined ? {} : { "content-type": "application/json" }),
       ...(options.anonymous
         ? {}
         : { cookie: [...cookies].map(([key, value]) => `${key}=${value}`).join("; ") }),

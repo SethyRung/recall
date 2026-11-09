@@ -97,9 +97,8 @@ failed-attempt events are discarded. Once answer text starts, errors end that an
 of mixing providers. SDK retries are disabled. Cancellation aborts the active attempt.
 
 Cooldowns and the 10-requests/minute IP limit are process-local. Use deployment-level limits for
-shared enforcement across replicas. Set `NUXT_TRUST_PROXY_HEADERS=true` only behind a trusted
-proxy that overwrites `X-Forwarded-For`; it is false by default. Provider request timeout is per
-attempt, so total latency can include several attempts.
+shared enforcement across replicas. Browser requests use the connection IP; forwarded IP headers
+are ignored. Provider request timeout is per attempt, so total latency can include several attempts.
 
 The server reads conversation history from its database. Client-supplied history cannot inject
 system instructions or tool results. Context is bounded; reasoning/tool parts from older turns

@@ -100,7 +100,7 @@ const {
   data: chatsEnvelope,
   status: chatsStatus,
   refresh: refreshChats,
-} = await useFetch<ApiResponse<ChatSummary[]>>("/api/chats", { key: "chats" });
+} = await useFetch<ApiResponse<ChatSummary[]>>("/api/chats");
 
 const chats = computed(() => {
   const env = chatsEnvelope.value;

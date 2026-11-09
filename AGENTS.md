@@ -15,7 +15,10 @@ nuxt.config.ts       Nuxt configuration
 ```
 
 Key entry points: `app/app.vue`, `app/pages/index.vue`, `app/pages/admin/*`,
-`server/api/chat.post.ts`, `server/api/admin/*`.
+`server/api/chats/[id].post.ts`, `server/api/admin/*`.
+
+External chat consumers use the authenticated API documented in `docs/chat-api.md`.
+Workspace and external consumers share `/api/chats/**` and `server/utils/chat-stream.ts`.
 
 ## Build, Test, and Development Commands
 
@@ -64,7 +67,8 @@ Pull requests should:
 ## Security & Configuration Tips
 
 - Never commit `.env`; only update `.env.example` when adding new keys.
-- Required secrets: `NUXT_LLM_*` (chat provider), `NUXT_EMBED_*` (embeddings),
-  `NUXT_BETTER_AUTH_SECRET`, `DATABASE_URL`.
+- Required secrets: `NUXT_APP_SECRET`, `NUXT_BETTER_AUTH_SECRET`, `DATABASE_URL`.
+  Provider credentials are managed in Admin. External consumers also require
+  the private `NUXT_CHAT_API_KEY`.
 - After schema changes, regenerate migrations with `drizzle-kit` before opening
   a PR.

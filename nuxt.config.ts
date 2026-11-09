@@ -16,7 +16,9 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    trustProxyHeaders: false,
+    appSecret: "",
+    chatApiKey: "",
+    chatApiTrustedOrigins: "",
   },
 
   auth: {
