@@ -12,8 +12,8 @@ Generate a service key with `openssl rand -base64 32`. Configure these private v
 | ----------- | ------------------------------- | ------------------------------------------------------------------ |
 | Recall      | `NUXT_CHAT_API_KEY`             | Generated key, at least 32 characters                              |
 | Recall      | `NUXT_CHAT_API_TRUSTED_ORIGINS` | Comma-separated Portfolio origins, such as `https://sethyrung.com` |
-| Portfolio   | `NUXT_RECALL_API_URL`           | Recall origin, such as `https://recall.example.com`                |
-| Portfolio   | `NUXT_RECALL_API_KEY`           | Same service key                                                   |
+| Portfolio   | `NUXT_CHAT_API_URL`             | Recall origin, such as `https://recall.example.com`                |
+| Portfolio   | `NUXT_CHAT_API_KEY`             | Same service key                                                   |
 
 Use HTTPS between hosted servers. Locally, Recall can run on port 3001 and Portfolio on port 3000.
 The base URL must be an HTTP(S) origin with no credentials, path, query or fragment. Restart or
@@ -41,20 +41,24 @@ Add that origin to Recall's allowlist, including its port during local developme
 ## Anonymous identity
 
 External requests require `Authorization: Bearer <service-key>`. Session endpoints also
-use Recall's `recall.visitor_id` cookie. A first `GET /api/chats` creates an opaque visitor ID
+use the service's `chat.visitor_id` cookie. A first `GET /api/chats` creates an opaque visitor ID
 and returns `Set-Cookie`; subsequent requests must carry that cookie. No user account is needed.
 The service key alone does not grant access to every visitor's conversations: each session read
 or mutation also checks the visitor cookie against its owner.
 
+Existing consumers may continue using `recall.visitor_id` and `X-Recall-Client-IP`. External
+bootstrap returns both visitor cookie names with the same ID; new integrations use the neutral
+names. Recall's own browser keeps its existing cookie and history.
+
 Portfolio calls Recall from its server. It stores the returned visitor ID in a first-party
-`portfolio.recall_visitor` cookie with HttpOnly, SameSite=Lax and a one-year lifetime. It sets
-Secure for its HTTPS site URL and forwards only this cookie as `recall.visitor_id` to Recall.
+`portfolio.chat_visitor` cookie with HttpOnly, SameSite=Lax and a one-year lifetime. It sets
+Secure for its HTTPS site URL and forwards only this cookie as `chat.visitor_id` to Recall.
 Auth cookies, other upstream cookies and browser authorization headers are excluded. The service
 key stays on the servers. Browser requests use Portfolio's own origin, so no CORS or third-party
 cookies are needed.
 
 Recall stores conversation contents in PostgreSQL. Portfolio stores only the selected
-conversation ID in localStorage (`recall:active-chat`); that ID grants no access without the
+conversation ID in localStorage (`chat:active-session`); that ID grants no access without the
 visitor cookie. Clearing localStorage can recover the most recent conversation from Recall.
 Clearing the visitor cookie starts a new anonymous identity. Existing browser-only transcripts
 under the old `ask-sethy-chat` key remain untouched and are not automatically uploaded.
@@ -107,11 +111,11 @@ For regeneration, first DELETE `/api/chats/:id/messages` with
 user message. `type: "edit"` removes messages after the target user message; generation updates
 that user message by ID. Starting a new conversation preserves previous conversations.
 
-Authenticated consumers may supply `X-Recall-Client-IP` with a valid IPv4/IPv6 address for the
+Authenticated consumers may supply `X-Chat-Client-IP` with a valid IPv4/IPv6 address for the
 process-local limit of ten generation requests/minute per IP. Portfolio derives it from the
 connection. Forwarded IP headers and other browser-supplied identity/IP headers are ignored.
 
-Portfolio exposes these resources under `/api/recall/chats/**`. Chat limits are enforced inside
+Portfolio exposes these resources under `/api/chat-service/chats/**`. Chat limits are enforced inside
 Recall; no external settings endpoint is exposed. Its proxy allows only the documented chat operations, validates JSON
 responses, strips internal visitor IDs, preserves actionable 400/404/409/415/429 statuses, and
 maps upstream configuration/network failures to a generic 503. It forwards no provider error

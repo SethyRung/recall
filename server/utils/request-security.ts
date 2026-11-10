@@ -49,6 +49,6 @@ export function assertChatApiAccess(event: H3Event) {
 }
 
 export function getChatApiClientAddress(event: H3Event) {
-  const address = getHeader(event, "x-recall-client-ip");
+  const address = getHeader(event, "x-chat-client-ip") ?? getHeader(event, "x-recall-client-ip");
   return address && isIP(address) ? address : undefined;
 }

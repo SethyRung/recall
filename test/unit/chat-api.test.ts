@@ -329,8 +329,24 @@ describe("shared persistent chat API", () => {
     expect((await response.json()).data).toEqual([]);
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(response.headers.getSetCookie()[0]).toMatch(
-      /recall\.visitor_id=.+;.*HttpOnly.*SameSite=Lax/i,
+      /chat\.visitor_id=.+;.*HttpOnly.*SameSite=Lax/i,
     );
+  });
+
+  it("preserves visitor ownership across neutral and legacy service cookies", async () => {
+    const response = await request();
+    const cookies = response.headers.getSetCookie().map((cookie) => cookie.split(";")[0]!);
+    const neutral = cookies.find((cookie) => cookie.startsWith("chat.visitor_id="))!;
+    const legacy = cookies.find((cookie) => cookie.startsWith("recall.visitor_id="))!;
+    expect(neutral.split("=")[1]).toBe(legacy.split("=")[1]);
+    const { id } = await create(neutral);
+    expect((await (await request(`chats/${id}`, "GET", undefined, legacy)).json()).data.id).toBe(
+      id,
+    );
+
+    const local = await fetch(`${base}/api/chats`, { headers: { origin: base } });
+    expect(local.headers.getSetCookie()).toHaveLength(1);
+    expect(local.headers.getSetCookie()[0]).toMatch(/^recall\.visitor_id=/);
   });
 
   it("persists messages and sources and restores them using only the visitor cookie", async () => {
@@ -458,19 +474,22 @@ describe("shared persistent chat API", () => {
     expect(stream).not.toHaveBeenCalled();
   });
 
-  it("uses the authenticated client's valid IP and enforces generation rate limits", async () => {
-    const cookie = await visitor();
-    const { id, message } = await create(cookie);
-    const response = await request(`chats/${id}`, "POST", { messages: [message] }, cookie, {
-      "x-recall-client-ip": "192.0.2.10",
-    });
-    await response.text();
-    expect(rateLimit.mock.calls[0]?.[0].context.recallClientAddress).toBe("192.0.2.10");
-    rateLimit.mockImplementation(() => {
-      throw h3.createError({ statusCode: 429 });
-    });
-    expect((await generate(id, user("Next question"), cookie)).status).toBe(429);
-  });
+  it.each(["x-chat-client-ip", "x-recall-client-ip"])(
+    "enforces rate limits using authenticated %s",
+    async (header) => {
+      const cookie = await visitor();
+      const { id, message } = await create(cookie);
+      const response = await request(`chats/${id}`, "POST", { messages: [message] }, cookie, {
+        [header]: "192.0.2.10",
+      });
+      await response.text();
+      expect(rateLimit.mock.calls[0]?.[0].context.recallClientAddress).toBe("192.0.2.10");
+      rateLimit.mockImplementation(() => {
+        throw h3.createError({ statusCode: 429 });
+      });
+      expect((await generate(id, user("Next question"), cookie)).status).toBe(429);
+    },
+  );
 
   it("enforces chat limits in Recall without exposing settings", async () => {
     expect((await request("chat/settings")).status).toBe(404);
